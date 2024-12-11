@@ -6,12 +6,20 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+    
+    if (!workspaceRoot) {
+        vscode.window.showErrorMessage('请先打开一个工作区');
+        return;
+    }
+    
     const gitFileProvider = new GitFileProvider(workspaceRoot);
 
     // 注册视图
     const treeView = vscode.window.createTreeView('commit-group-view', {
         treeDataProvider: gitFileProvider
     });
+
+
 
     // 注册命令
     context.subscriptions.push(
@@ -71,38 +79,38 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // 增强 Git 变化监听
-    const gitExtension = vscode.extensions.getExtension('vscode.git');
-    if (gitExtension) {
-        gitExtension.activate().then(git => {
-            const api = git.getAPI(1);
+    // const gitExtension = vscode.extensions.getExtension('vscode.git');
+    // if (gitExtension) {
+    //     gitExtension.activate().then(git => {
+    //         const api = git.getAPI(1);
             
-            // 监听仓库状态变化
-            api.onDidChangeState(() => {
-                gitFileProvider.refresh();
-            });
+    //         // 监听仓库状态变化
+    //         api.onDidChangeState(() => {
+    //             gitFileProvider.refresh();
+    //         });
 
-            // 监听具体仓库
-            if (api.repositories[0]) {
-                const repository = api.repositories[0];
+    //         // 监听具体仓库
+    //         if (api.repositories[0]) {
+    //             const repository = api.repositories[0];
                 
-                // 监听工作区变化
-                repository.state.onDidChange(() => {
-                    gitFileProvider.refresh();
-                });
+    //             // 监听工作区变化
+    //             repository.state.onDidChange(() => {
+    //                 gitFileProvider.refresh();
+    //             });
                 
-                // 监听索引变化
-                // repository.state.onDidChangeIndex(() => {
-                //     gitFileProvider.refresh();
-                // });
-            }
-        });
-    }
+    //             // 监听索引变化
+    //             // repository.state.onDidChangeIndex(() => {
+    //             //     gitFileProvider.refresh();
+    //             // });
+    //         }
+    //     });
+    // }
 
     // 监听文件系统变化
-    const fileSystemWatcher = vscode.workspace.createFileSystemWatcher('**/*');
-    fileSystemWatcher.onDidChange(() => gitFileProvider.refresh());
-    fileSystemWatcher.onDidCreate(() => gitFileProvider.refresh());
-    fileSystemWatcher.onDidDelete(() => gitFileProvider.refresh());
+    // const fileSystemWatcher = vscode.workspace.createFileSystemWatcher('**/*');
+    // fileSystemWatcher.onDidChange(() => gitFileProvider.refresh());
+    // fileSystemWatcher.onDidCreate(() => gitFileProvider.refresh());
+    // fileSystemWatcher.onDidDelete(() => gitFileProvider.refresh());
 
-    context.subscriptions.push(treeView, fileSystemWatcher);
+    // context.subscriptions.push(treeView, fileSystemWatcher);
 } 

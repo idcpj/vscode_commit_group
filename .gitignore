@@ -1,4 +1,4 @@
-./out
-./dist
+out
+dist
 .vscode
 node_modules
