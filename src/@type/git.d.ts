@@ -112,19 +112,32 @@ export interface Change {
 	readonly status: Status;
 }
 
+/**
+ * Git仓库状态接口
+ */
 export interface RepositoryState {
-	readonly HEAD: Branch | undefined;
-	readonly refs: Ref[];
-	readonly remotes: Remote[];
-	readonly submodules: Submodule[];
-	readonly rebaseCommit: Commit | undefined;
+    /** 当前HEAD指向的分支 */
+    readonly HEAD: Branch | undefined;
+    /** 所有引用(分支/标签等) */
+    readonly refs: Ref[];
+    /** 远程仓库列表 */
+    readonly remotes: Remote[];
+    /** 子模块列表 */
+    readonly submodules: Submodule[];
+    /** rebase时的提交 */
+    readonly rebaseCommit: Commit | undefined;
 
-	readonly mergeChanges: Change[];
-	readonly indexChanges: Change[];
-	readonly workingTreeChanges: Change[];
-	readonly untrackedChanges: Change[];
+    /** 合并时的文件变更 */
+    readonly mergeChanges: Change[];
+    /** 暂存区的文件变更 */
+    readonly indexChanges: Change[];
+    /** 工作区的文件变更 */
+    readonly workingTreeChanges: Change[];
+    /** 未跟踪的文件变更 */
+    readonly untrackedChanges: Change[];
 
-	readonly onDidChange: Event<void>;
+    /** 状态变更事件 */
+    readonly onDidChange: Event<void>;
 }
 
 export interface RepositoryUIState {

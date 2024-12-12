@@ -3,7 +3,8 @@ import * as path from 'path';
 import { GitFileItem } from './GitFileItem';
 import { GroupItem } from './GroupItem';
 import { TextEncoder } from 'node:util';
-import { GitExtension } from '../@type/git';
+import { Change, GitExtension } from '../@type/git';
+import { GitItem } from './GitItem';
 
 export class GitFileProvider implements vscode.TreeDataProvider<GroupItem | GitFileItem> {
     private workspaceRoot: string;
@@ -96,9 +97,11 @@ export class GitFileProvider implements vscode.TreeDataProvider<GroupItem | GitF
             return [];
         }
 
-        if (element instanceof GroupItem) {
-            return element.files;
-        }
+        return [new GroupItem('暂存的更改', vscode.TreeItemCollapsibleState.Expanded, [], new vscode.ThemeIcon('check'), 0)]
+
+        // if (element instanceof GroupItem) {
+        //     return element.files;
+        // }
 
         if (!element) {
             try {
@@ -152,12 +155,12 @@ export class GitFileProvider implements vscode.TreeDataProvider<GroupItem | GitF
         return [];
     }
 
-    private createFileItem(change: any): GitFileItem {
+    private createFileItem(change: Change): GitFileItem {
         const status = this.getStatusText(change.status);
         const filePath = change.uri.fsPath;
         const fileName = path.basename(filePath);
         
-        return new GitFileItem(
+        return new GitItem(
             fileName,
             vscode.TreeItemCollapsibleState.None,
             status,

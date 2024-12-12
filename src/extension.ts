@@ -114,3 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // context.subscriptions.push(treeView, fileSystemWatcher);
 } 
+
+export function deactivate() {
+    console.log('Commit Group extension deactivated');
+}
