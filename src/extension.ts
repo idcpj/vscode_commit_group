@@ -1,18 +1,21 @@
 import * as vscode from 'vscode';
 import { GitFileProvider } from './lib/GitFileProvider';
 import { GroupItem } from './lib/GroupItem';
+import { GitGroupManager } from './lib/GitGroup';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
 
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-    
+
     if (!workspaceRoot) {
         vscode.window.showErrorMessage('请先打开一个工作区');
         return;
     }
-    
-    const gitFileProvider = new GitFileProvider(workspaceRoot);
+
+    const groups = context.workspaceState.get<GitGroupManager>('commit-group.groups', new GitGroupManager([]));
+
+    const gitFileProvider = new GitFileProvider(workspaceRoot, groups);
 
     // 注册视图
     const treeView = vscode.window.createTreeView('commit-group-view', {
@@ -30,13 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // 展开所有命令
         vscode.commands.registerCommand('commit-group.expandAll', async () => {
-            const allItems = await gitFileProvider.getAllItems();
-            for (const item of allItems) {
-                treeView.reveal(item, {
-                    expand: true,
-                    select: false
-                });
-            }
+            vscode.commands.executeCommand('workbench.actions.treeView.commit-group-view.expandAll');
         }),
 
         // 折叠所有命令
@@ -46,35 +43,29 @@ export function activate(context: vscode.ExtensionContext) {
 
         // 新建分组命令
         vscode.commands.registerCommand('commit-group.addGroup', async () => {
-            // 创建一个 TreeItem 作为可编辑项
-            const editableItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
-            editableItem.command = {
-                command: 'commit-group.startEditing',
-                title: '开始编辑'
-            };
-
-            // 注册编辑命令
-            vscode.commands.registerCommand('commit-group.startEditing', async () => {
-                const groupName = await vscode.window.showInputBox({
-                    placeHolder: '输入分组名称并回车',
-                    validateInput: (value) => {
-                        if (!value) return '名称不能为空';
-                        if (gitFileProvider.getGroups(value)) return '分组名称已存在';
-                        return null;
-                    }
-                });
-
-                if (groupName) {
-                    await gitFileProvider.addGroup(groupName);
+            const groupName = await vscode.window.showInputBox({
+                placeHolder: '输入分组名称并回车',
+                validateInput: (value) => {
+                    if (!value) return '名称不能为空';
+                    if (gitFileProvider.groupIsExist(value)) return '分组名称已存在';
+                    return null;
                 }
             });
 
+            if (groupName) {
+                gitFileProvider.addGroup(groupName);
+            }
         }),
+
+
 
         // 删除分组命令
         vscode.commands.registerCommand('commit-group.deleteGroup', (item: GroupItem) => {
-            console.log("delte group item:",item)
-            gitFileProvider.deleteGroup(item.label);
+            try{
+                gitFileProvider.deleteGroup(item.label);
+            }catch(e){
+                vscode.window.showErrorMessage(`删除分组失败:${e}`);
+            }
         })
     );
 
@@ -83,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
     // if (gitExtension) {
     //     gitExtension.activate().then(git => {
     //         const api = git.getAPI(1);
-            
+
     //         // 监听仓库状态变化
     //         api.onDidChangeState(() => {
     //             gitFileProvider.refresh();
@@ -92,12 +83,12 @@ export function activate(context: vscode.ExtensionContext) {
     //         // 监听具体仓库
     //         if (api.repositories[0]) {
     //             const repository = api.repositories[0];
-                
+
     //             // 监听工作区变化
     //             repository.state.onDidChange(() => {
     //                 gitFileProvider.refresh();
     //             });
-                
+
     //             // 监听索引变化
     //             // repository.state.onDidChangeIndex(() => {
     //             //     gitFileProvider.refresh();
@@ -106,6 +97,8 @@ export function activate(context: vscode.ExtensionContext) {
     //     });
     // }
 
+
+
     // 监听文件系统变化
     // const fileSystemWatcher = vscode.workspace.createFileSystemWatcher('**/*');
     // fileSystemWatcher.onDidChange(() => gitFileProvider.refresh());
@@ -113,7 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
     // fileSystemWatcher.onDidDelete(() => gitFileProvider.refresh());
 
     // context.subscriptions.push(treeView, fileSystemWatcher);
-} 
+}
 
 export function deactivate() {
     console.log('Commit Group extension deactivated');

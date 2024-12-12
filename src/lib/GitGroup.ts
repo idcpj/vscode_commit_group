@@ -1,27 +1,37 @@
-export type GroupType = {
-    order: number;
-    id: string;
-    name: string;
-    active: boolean;
-}
+import { GitFileItem } from "./GitFileItem";
+import { GroupItem } from "./GroupItem";
+import * as vscode from 'vscode';
 
-export class GitGroup {
-    private groups: GroupType[];
+
+export class GitGroupManager {
+    private groups: GroupItem[];
     constructor(
-        groups: GroupType[]
+        groups: GroupItem[]
     ) {
         this.groups = groups;
     }
+
+    public getGroups(): GroupItem[] {
+        return this.groups;
+    }
+ 
+
+    /**
+     * 获取指定名称的group
+     * @param name group的名称
+     * @returns 指定名称的group
+     */
+    public getGroupByName(name:string):GroupItem|undefined{
+        return this.groups.find(group => group.label === name);
+    }
+
     /**
      * 激活指定id的group
-     * @param id group的id
+     * @param name group的名称
      */
-    public activateGroup(id: string): void {
-        this.groups = this.groups.map(group => {
-            return {
-                ...group,
-                active: group.id === id
-            };
+    public activateGroup(name: string): void {
+        this.groups.forEach(group => {
+            group.active = group.label === name;
         });
     }
     
@@ -29,19 +39,19 @@ export class GitGroup {
      * 删除指定id的group
      * @param id group的id
      */
-    public deleteGroup(id: string): void {
+    public deleteGroup(name: string): void {
         // 判断要删除的是否为激活的group
-        const isActiveGroup = this.groups.find(group => group.id === id)?.active;
+        const isActiveGroup = this.groups.find(group => group.label === name)?.active;
         
         // 先过滤掉要删除的group
-        this.groups = this.groups.filter(group => group.id !== id);
+        this.groups = this.groups.filter(group => group.label !== name);
 
         // 如果删除的是激活的group,则激活order最小的group
         if (isActiveGroup && this.groups.length > 0) {
             const minOrderGroup = this.groups.reduce((prev, curr) => 
                 prev.order < curr.order ? prev : curr
             );
-            this.activateGroup(minOrderGroup.id);
+            this.activateGroup(minOrderGroup.label);
         }
     }
     
@@ -50,9 +60,16 @@ export class GitGroup {
      * @param name group的名称
      * @returns 新添加的group的id
      */
-    public addGroup(name: string): string {
+    public addGroup(name: string,isActive:boolean=false) {
         // 生成唯一id
-        const id = Date.now().toString();
+        
+        const id:string=name;
+
+        // 名字唯一
+        if(this.getGroupByName(name)){
+            throw new Error(`Group ${name} already exists`);
+        }
+     
         
         // 获取最大的order
         const maxOrder = this.groups.reduce((max, group) => 
@@ -61,22 +78,28 @@ export class GitGroup {
         );
 
         // 创建新group
-        const newGroup: GroupType = {
-            id,
-            name,
-            order: maxOrder + 1,
-            active: false
-        };
+        const newGroup: GroupItem = new GroupItem(id, name, maxOrder + 1,isActive);
 
         // 添加到groups中
         this.groups.push(newGroup);
-
-        // 如果是第一个group,则激活它
-        if (this.groups.length === 1) {
-            this.activateGroup(id);
-        }
-
-        return id;
     }
+
+    public activateGroupById(name:string):void{
+        this.groups.forEach(group => {
+            group.active = group.label === name;
+        });
+    }
+
+    public moveFile(file:GitFileItem,targetGroup:GroupItem):void{
+        // 从源分组移除
+        const sourceGroup = this.groups.find(group => group.files.includes(file));
+        if (sourceGroup) {
+            sourceGroup.removeFile(file);
+        }
+        // 添加到目标分组
+        targetGroup.addFile(file);
+    }
+
+
 }
 
