@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { GitTreeItemFile } from './GitTreeItemFile';
 import { Change } from '../@type/git';
+import { GitGroupName_Untracked } from '../type';
 
 export class GitTreeItemGroup extends vscode.TreeItem {
     constructor(
@@ -12,14 +13,36 @@ export class GitTreeItemGroup extends vscode.TreeItem {
     ) {
         super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
-        this.contextValue = 'group';
+        let contextValue = 'group';
+
+        // 未跟踪的,不能删除
+        if(label == GitGroupName_Untracked){
+            contextValue = 'group-disabled';
+        }else{
+            contextValue = active ? 'group-active' : 'group-inactive';
+        }
+
+
+        this.active = active;
+        this.contextValue = contextValue;
         this.id = id;
         this.order = order;
-        this.active = active;
         this.files = files;
         this.iconPath = active?new vscode.ThemeIcon('check'):new vscode.ThemeIcon('folder');
 
         this.description = `${this.files.length} 个文件`;
+    }
+
+    checkActive(){
+        this.active = true;
+        this.iconPath = new vscode.ThemeIcon('check');
+        this.contextValue = 'group-active';
+    }
+
+    uncheckActive(){
+        this.active = false;
+        this.iconPath = new vscode.ThemeIcon('folder');
+        this.contextValue = 'group-inactive';
     }
 
     addFile(file: GitTreeItemFile){
@@ -51,7 +74,5 @@ export class GitTreeItemGroup extends vscode.TreeItem {
             active: this.active
         };
     }
-
-
 
 } 

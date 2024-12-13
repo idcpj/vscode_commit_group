@@ -15,8 +15,8 @@ export class GitGroupManager {
     }
 
     public getGroups(): GitTreeItemGroup[] {
-        // 未跟踪的分组排最后
-        return this.groups.sort((a, b) => a.label === GitGroupName_Untracked ? 1 : b.label === GitGroupName_Untracked ? -1 : 0);
+        // 未跟踪的分组排最后,激活的分组排最前
+        return this.groups.sort((a, b) => a.label === GitGroupName_Untracked ? 1 : b.label === GitGroupName_Untracked ? -1 : a.active ? -1 : b.active ? 1 : 0);
     }
 
 
@@ -33,11 +33,16 @@ export class GitGroupManager {
      * 激活指定id的group
      * @param name group的名称
      */
-    public activateGroup(name: string): void {
+    public activeGroup(name: string): void {
         this.groups.forEach(group => {
-            group.active = group.label === name;
+            if(group.label === name){
+                group.checkActive();
+            }else{
+                group.uncheckActive();
+            }
         });
     }
+
 
     /**
      * 删除指定id的group
@@ -131,6 +136,5 @@ export class GitGroupManager {
             this.fileList[change.uri.fsPath]=file;
         }
     }
-
 
 }

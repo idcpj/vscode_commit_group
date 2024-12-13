@@ -21,9 +21,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const treeView = vscode.window.createTreeView('commit-group-view', {
         treeDataProvider: gitFileProvider,
         dragAndDropController: gitFileProvider,
-        manageCheckboxStateManually: true,
-        canSelectMany: true,
-        showCollapseAll: true,
+        // manageCheckboxStateManually: true,
+        // canSelectMany: true,
+        // showCollapseAll: true,
     });
 
 
@@ -69,6 +69,15 @@ export async function activate(context: vscode.ExtensionContext) {
                 gitFileProvider.deleteGroup(item.label);
             }catch(e){
                 vscode.window.showErrorMessage(`删除分组失败:${e}`);
+            }
+        }),
+
+        // 激活分组
+        vscode.commands.registerCommand('commit-group.activeGroup', (item: GitTreeItemGroup) => {
+            try{
+                gitFileProvider.activeGroup(item.label);
+            }catch(e){
+                vscode.window.showErrorMessage(`切换激活状态失败:${e}`);
             }
         })
     );

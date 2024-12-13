@@ -195,4 +195,9 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
         }
     }
 
+    activeGroup(groupName:string){
+        this.groups.activeGroup(groupName);
+        this.refresh();
+    }
+
 }

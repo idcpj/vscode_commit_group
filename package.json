@@ -38,7 +38,12 @@
       {
         "command": "commit-group.deleteGroup",
         "title": "删除分组",
-        "icon": "$(trash)"
+          "icon": "$(trash)"
+      },
+      {
+        "command": "commit-group.activeGroup",
+        "title": "切换激活状态",
+        "icon": "$(check)"
       }
     ],
     "viewsContainers": {
@@ -86,8 +91,22 @@
       "view/item/context": [
         {
           "command": "commit-group.deleteGroup",
-          "when": "view == commit-group-view && viewItem == group",
+          "when": "view == commit-group-view && viewItem =~ /group-.*active/",
           "group": "inline"
+        },
+        {
+          "command": "commit-group.deleteGroup",
+          "when": "view == commit-group-view && viewItem =~ /group-.*active/"
+        },
+        
+        {
+          "command": "commit-group.activeGroup",
+          "when": "view == commit-group-view && viewItem == group-inactive",
+          "group": "inline"
+        },
+        {
+          "command": "commit-group.activeGroup",
+          "when": "view == commit-group-view && viewItem == group-inactive"
         }
       ]
     }
