@@ -77,45 +77,45 @@ export interface Remote {
 
 export const enum Status {
     /** 暂存区中被修改的文件 */
-    INDEX_MODIFIED,
+    INDEX_MODIFIED=0,
     /** 暂存区中新增的文件 */
-    INDEX_ADDED,
+    INDEX_ADDED=1,
     /** 暂存区中删除的文件 */
-    INDEX_DELETED,
+    INDEX_DELETED=2,
     /** 暂存区中重命名的文件 */
-    INDEX_RENAMED,
+    INDEX_RENAMED=3,
     /** 暂存区中复制的文件 */
-    INDEX_COPIED,
+    INDEX_COPIED=4,
 
     /** 工作区中被修改的文件 */
-    MODIFIED,
+    MODIFIED=5,
     /** 工作区中删除的文件 */
-    DELETED,
+    DELETED=6,
     /** 未跟踪的文件 */
-    UNTRACKED,
+    UNTRACKED=7,
     /** 被忽略的文件 */
-    IGNORED,
+    IGNORED=8,
     /** 准备添加的文件 */
-    INTENT_TO_ADD,
+    INTENT_TO_ADD=9,
     /** 准备重命名的文件 */
-    INTENT_TO_RENAME,
+    INTENT_TO_RENAME=10,
     /** 文件类型发生变化 */
-    TYPE_CHANGED,
+    TYPE_CHANGED=11,
 
     /** 我们添加的文件(合并冲突) */
-    ADDED_BY_US,
+    ADDED_BY_US=12,
     /** 他们添加的文件(合并冲突) */
-    ADDED_BY_THEM,
+    ADDED_BY_THEM=13,
     /** 我们删除的文件(合并冲突) */
-    DELETED_BY_US,
+    DELETED_BY_US=14,
     /** 他们删除的文件(合并冲突) */
-    DELETED_BY_THEM,
+    DELETED_BY_THEM=15,
     /** 双方都添加的文件(合并冲突) */
-    BOTH_ADDED,
+    BOTH_ADDED=16,
     /** 双方都删除的文件(合并冲突) */
-    BOTH_DELETED,
+    BOTH_DELETED=17,
     /** 双方都修改的文件(合并冲突) */
-    BOTH_MODIFIED
+    BOTH_MODIFIED=18
 }
 
 export interface Change {

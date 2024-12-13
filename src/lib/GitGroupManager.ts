@@ -35,6 +35,9 @@ export class GitGroupManager {
         return this.groups.find(group => group.label === name);
     }
 
+    public getFiles(): GitTreeItemFile[]{
+        return Object.values(this.fileList);
+    }
     /**
      * 激活指定id的group
      * @param name group的名称
@@ -184,17 +187,22 @@ export class GitGroupManager {
      * 在激活的group中添加文件
      * @param filePath 文件路径
      */
-    public async addFileInActiveGroup(filePath: string) {
+    public async addFileInActiveGroup(filePath: string,change?:Change) {
         const activeGroup = this.getActiveGroup();
         if (!activeGroup) {
             throw new Error("activeGroup is null");
+        }
+
+        if(change){
+            this.addFile(activeGroup.label, change);
+            return 
         }
 
         const file = await this.sdk.getGitManager().getChangeByFilePath(filePath);
         if (file) {
             this.addFile(activeGroup.label, file);
         }
-
+     
 
     }
 

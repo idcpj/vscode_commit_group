@@ -3,6 +3,7 @@ import { Sdk } from "../bin/sdk";
 import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
 import { sleep } from "../help/time";
 import * as vscode from 'vscode';
+import { GitTreeItemFile } from "./data/GitTreeItemFile";
 
 
 export class GitManager {
@@ -86,21 +87,32 @@ export class GitManager {
     public async loadFileList() {
         const repository = await this.sdk.getGitManager().getRepository();
 
+        const oldFiles:GitTreeItemFile[] =Object.assign([],this.sdk.getGitGroupManager().getFiles());
+        const needRemoveFiles:string[] = [];
+
         // 未跟踪的文件变更
         for (const change of repository.state.untrackedChanges) {
+
+            needRemoveFiles.push(change.uri.fsPath);
+
             this.addFile(GitGroupName_Untracked, change);
         }
 
         // 暂存区的文件变更
         for (const change of repository.state.indexChanges) {
-            // console.log("indexChanges change", change.uri.fsPath);
+            console.log("indexChanges change", change.uri.fsPath);
+            needRemoveFiles.push(change.uri.fsPath);
             this.addFile(GitGroupName_Working, change);
         }
 
 
+        // 如果是修改后又还原的文件,不在所有的 repository.state 中,进行移除
+
         // 处理工作区更改
         for (const change of repository.state.workingTreeChanges) {
             // console.log("workingTreeChanges change", change.uri.fsPath);
+
+            needRemoveFiles.push(change.uri.fsPath);
 
             switch (change.status) {
                 case Status.MODIFIED:
@@ -116,6 +128,11 @@ export class GitManager {
                     if (ignoreFile.size > 0) {
                         break;
                     }
+
+                    
+
+                    console.log("untracked",change.uri.fsPath,change.status);
+
                     this.addFile(GitGroupName_Untracked, change);
 
                     break;
@@ -125,32 +142,43 @@ export class GitManager {
             }
         }
 
+        oldFiles.forEach(file => {
+            if(!needRemoveFiles.includes(file.getFilePath())){
+                this.sdk.getGitGroupManager().removeFile(file.getFilePath());
+            }
+        });
+
     }
 
     public addFile(groupName: string, change: Change) {
 
         // 判断文件是否存在
         const oldFile = this.sdk.getGitGroupManager().getFile(change.uri.fsPath);
-        if (oldFile ) {
+        if (oldFile) {
             
             // 状态一样无需处理
             if(oldFile.getChange()?.status===change.status){
                 return;
             }
 
-            // change  不存在,说明是从换成中获取,只需要绑定 status
+
+            // change  不存在,说明是从 cache 中获取,只需要绑定 status
             if(oldFile.getChange()?.status===undefined){
                 oldFile.setChange(change);
                 return;
             }
+
 
             // 删除旧文件
             this.sdk.getGitGroupManager().removeFile(oldFile.getFilePath());
         }
 
         // 添加文件到指定分组
-        // console.log("addFile",groupName, change.uri.fsPath);
-        this.sdk.getGitGroupManager().addFile(groupName, change);
+        if(groupName===GitGroupName_Untracked){
+            this.sdk.getGitGroupManager().addFile(GitGroupName_Untracked, change);
+        }else{
+            this.sdk.getGitGroupManager().addFileInActiveGroup(groupName, change);
+        }
 
         console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
 
