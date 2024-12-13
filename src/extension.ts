@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { GitFileProvider } from './lib/GitFileProvider';
-import { GroupItem } from './lib/GroupItem';
-import { GitGroupManager } from './lib/GitGroup';
+import { GitTreeItemGroup } from './lib/GitTreeItemGroup';
+import { GitGroupManager } from './lib/GitGroupManager';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -19,7 +19,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // 注册视图
     const treeView = vscode.window.createTreeView('commit-group-view', {
-        treeDataProvider: gitFileProvider
+        treeDataProvider: gitFileProvider,
+        dragAndDropController: gitFileProvider,
+        manageCheckboxStateManually: true,
+        canSelectMany: true,
+        showCollapseAll: true,
     });
 
 
@@ -60,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
         // 删除分组命令
-        vscode.commands.registerCommand('commit-group.deleteGroup', (item: GroupItem) => {
+        vscode.commands.registerCommand('commit-group.deleteGroup', (item: GitTreeItemGroup) => {
             try{
                 gitFileProvider.deleteGroup(item.label);
             }catch(e){

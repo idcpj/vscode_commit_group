@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
-import { GitFileItem } from './GitFileItem';
+import { GitTreeItemFile } from './GitTreeItemFile';
+import { Change } from '../@type/git';
 
-export class GroupItem extends vscode.TreeItem {
+export class GitTreeItemGroup extends vscode.TreeItem {
     constructor(
         public readonly id: string,
         public label: string,
         public order: number,
         public active: boolean=false,
-        public files: GitFileItem[]=[],
+        public files: GitTreeItemFile[]=[],
     ) {
         super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
@@ -21,13 +22,23 @@ export class GroupItem extends vscode.TreeItem {
         this.description = `${this.files.length} 个文件`;
     }
 
-    addFile(file: GitFileItem){
+    addFile(file: GitTreeItemFile){
+        file.setGroup(this);
         this.files.push(file);
         this.description = `${this.files.length} 个文件`;
     }
+    
 
-    removeFile(file: GitFileItem){
-        this.files = this.files.filter(f => f.id !== file.id);
+    addFileByChange(change: Change){
+        this.files.push(new GitTreeItemFile(change,this));
+        this.description = `${this.files.length} 个文件`;
+    }
+
+    removeFile(file: string){
+        const index = this.files.findIndex(f => f.resourceUri?.fsPath === file);
+        if (index !== -1) {
+            this.files.splice(index, 1);
+        }
         this.description = `${this.files.length} 个文件`;
     }
     

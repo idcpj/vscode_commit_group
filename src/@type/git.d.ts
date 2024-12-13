@@ -244,8 +244,22 @@ export interface Repository {
 	show(ref: string, path: string): Promise<string>;
 	getCommit(ref: string): Promise<Commit>;
 
+	/**
+	 * 将文件添加到暂存区
+	 * @param paths 文件路径数组
+	 */
 	add(paths: string[]): Promise<void>;
+
+	/**
+	 * 撤销工作区的修改,恢复到最近一次提交的状态
+	 * @param paths 文件路径数组
+	 */
 	revert(paths: string[]): Promise<void>;
+
+	/**
+	 * 清理未跟踪的文件
+	 * @param paths 文件路径数组
+	 */
 	clean(paths: string[]): Promise<void>;
 
 	apply(patch: string, reverse?: boolean): Promise<void>;

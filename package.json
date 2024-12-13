@@ -54,7 +54,9 @@
       "commit-group": [
         {
           "id": "commit-group-view",
-          "name": "%view.commitGroup.name%"
+          "name": "%view.commitGroup.name%",
+          "draggable": true,
+          "dragAndDropController":true
         }
       ]
     },

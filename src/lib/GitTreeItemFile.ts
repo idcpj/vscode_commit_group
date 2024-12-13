@@ -1,18 +1,23 @@
 import * as vscode from 'vscode';
 import { Change } from '../@type/git';
 import * as path from 'path';
+import { GitTreeItemGroup } from './GitTreeItemGroup';
 
-export class GitFileItem extends vscode.TreeItem {
+export class GitTreeItemFile extends vscode.TreeItem {
     private file:Change;
+    private group:GitTreeItemGroup;
     constructor(
         file:Change,
+        group:GitTreeItemGroup,
     ) {
         super(path.basename(file.uri.fsPath), vscode.TreeItemCollapsibleState.None);
         
+        this.group=group;
         this.file = file;
         this.tooltip = `${file.status}: ${file.uri.fsPath}`;
-        this.description = this.getStatusText(file.status);
+        // this.description = this.getStatusText(file.status);
         this.contextValue = 'file.draggable';
+        
         // 根据文件后缀自动获取图标
         this.iconPath = new vscode.ThemeIcon('file');
         this.resourceUri = vscode.Uri.file(file.uri.fsPath); // 设置 resourceUri 后 VS Code 会自动根据文件类型显示对应图标
@@ -22,6 +27,12 @@ export class GitFileItem extends vscode.TreeItem {
             title: 'Open File',
             arguments: [vscode.Uri.file(file.uri.fsPath)]
         };
+    }
+    public getGroup():GitTreeItemGroup{
+        return this.group;
+    }
+    public setGroup(group:GitTreeItemGroup){
+        this.group=group;
     }
 
     private getStatusText(status: number): string {
