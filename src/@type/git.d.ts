@@ -148,9 +148,9 @@ export interface RepositoryState {
 
     /** 合并时的文件变更 */
     readonly mergeChanges: Change[];
-    /** 暂存区的文件变更 */
+    /** 暂存区的文件变更,执行 git add 的文件 */
     readonly indexChanges: Change[];
-    /** 工作区的文件变更 */
+    /** 工作区的文件变更,没执行 git add 的文件 */
     readonly workingTreeChanges: Change[];
     /** 未跟踪的文件变更 */
     readonly untrackedChanges: Change[];

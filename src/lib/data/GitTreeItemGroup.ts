@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { GitTreeItemFile } from './GitTreeItemFile';
-import { Change } from '../@type/git';
-import { GitGroupName_Untracked } from '../type';
+import { Change } from '../../@type/git';
+import { GitGroupName_Untracked } from '../../const';
 
 export class GitTreeItemGroup extends vscode.TreeItem {
     constructor(
@@ -64,6 +64,8 @@ export class GitTreeItemGroup extends vscode.TreeItem {
         }
         this.description = `${this.files.length} 个文件`;
     }
+
+    
     
     toJson(){
         return {

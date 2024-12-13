@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import { GitFileProvider } from './lib/GitFileProvider';
-import { GitTreeItemGroup } from './lib/GitTreeItemGroup';
-import { GitGroupManager } from './lib/GitGroupManager';
+import { Sdk } from './bin/sdk';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -13,14 +11,16 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    const groups = context.workspaceState.get<GitGroupManager>('commit-group.groups', new GitGroupManager([]));
+    const sdk = new Sdk(workspaceRoot,context)
 
-    const gitFileProvider = new GitFileProvider(workspaceRoot, groups);
+    sdk.run();
+
+
 
     // 注册视图
     const treeView = vscode.window.createTreeView('commit-group-view', {
-        treeDataProvider: gitFileProvider,
-        dragAndDropController: gitFileProvider,
+        treeDataProvider: sdk.getGitFileProvider(),
+        dragAndDropController: sdk.getGitFileTreeDrop(),
         // manageCheckboxStateManually: true,
         // canSelectMany: true,
         // showCollapseAll: true,
@@ -31,14 +31,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // 注册命令
     context.subscriptions.push(
         // 刷新命令
-        vscode.commands.registerCommand('commit-group.refresh', () => {
-            gitFileProvider.refresh();
-        }),
+        vscode.commands.registerCommand('commit-group.refresh',sdk.cmd_refresh.bind(sdk)),
 
         // 展开所有命令
-        vscode.commands.registerCommand('commit-group.expandAll', async () => {
-            vscode.commands.executeCommand('workbench.actions.treeView.commit-group-view.expandAll');
-        }),
+        vscode.commands.registerCommand('commit-group.expandAll', sdk.cmd_expandAll.bind(sdk,treeView)),
 
         // 折叠所有命令
         vscode.commands.registerCommand('commit-group.collapseAll', () => {
@@ -46,69 +42,16 @@ export async function activate(context: vscode.ExtensionContext) {
         }),
 
         // 新建分组命令
-        vscode.commands.registerCommand('commit-group.addGroup', async () => {
-            const groupName = await vscode.window.showInputBox({
-                placeHolder: '输入分组名称并回车',
-                validateInput: (value) => {
-                    if (!value) return '名称不能为空';
-                    if (gitFileProvider.groupIsExist(value)) return '分组名称已存在';
-                    return null;
-                }
-            });
-
-            if (groupName) {
-                gitFileProvider.addGroup(groupName);
-            }
-        }),
-
-
+        vscode.commands.registerCommand('commit-group.addGroup', sdk.cmd_addGroup.bind(sdk)),
 
         // 删除分组命令
-        vscode.commands.registerCommand('commit-group.deleteGroup', (item: GitTreeItemGroup) => {
-            try{
-                gitFileProvider.deleteGroup(item.label);
-            }catch(e){
-                vscode.window.showErrorMessage(`删除分组失败:${e}`);
-            }
-        }),
+        vscode.commands.registerCommand('commit-group.deleteGroup',sdk.cmd_deleteGroup.bind(sdk)),
 
         // 激活分组
-        vscode.commands.registerCommand('commit-group.activeGroup', (item: GitTreeItemGroup) => {
-            try{
-                gitFileProvider.activeGroup(item.label);
-            }catch(e){
-                vscode.window.showErrorMessage(`切换激活状态失败:${e}`);
-            }
-        })
+        vscode.commands.registerCommand('commit-group.activeGroup',sdk.cmd_activeGroup.bind(sdk)),
+
     );
 
-    // 增强 Git 变化监听
-    // const gitExtension = vscode.extensions.getExtension('vscode.git');
-    // if (gitExtension) {
-    //     gitExtension.activate().then(git => {
-    //         const api = git.getAPI(1);
-
-    //         // 监听仓库状态变化
-    //         api.onDidChangeState(() => {
-    //             gitFileProvider.refresh();
-    //         });
-
-    //         // 监听具体仓库
-    //         if (api.repositories[0]) {
-    //             const repository = api.repositories[0];
-
-    //             // 监听工作区变化
-    //             repository.state.onDidChange(() => {
-    //                 gitFileProvider.refresh();
-    //             });
-
-    //             // 监听索引变化
-    //             // repository.state.onDidChangeIndex(() => {
-    //             //     gitFileProvider.refresh();
-    //             // });
-    //         }
-    //     });
-    // }
 
 
 
