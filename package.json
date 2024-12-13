@@ -38,7 +38,7 @@
       {
         "command": "commit-group.deleteGroup",
         "title": "删除分组",
-          "icon": "$(trash)"
+        "icon": "$(trash)"
       },
       {
         "command": "commit-group.activeGroup",
@@ -61,7 +61,7 @@
           "id": "commit-group-view",
           "name": "%view.commitGroup.name%",
           "draggable": true,
-          "dragAndDropController":true
+          "dragAndDropController": true
         }
       ]
     },
@@ -98,7 +98,6 @@
           "command": "commit-group.deleteGroup",
           "when": "view == commit-group-view && viewItem =~ /group-.*active/"
         },
-        
         {
           "command": "commit-group.activeGroup",
           "when": "view == commit-group-view && viewItem == group-inactive",
@@ -132,7 +131,6 @@
     "globals": "^15.13.0",
     "mocha": "^11.0.1",
     "typescript": "^4.x.x",
-    "typescript-eslint": "^8.18.0",
-    "vscode-test": "^1.6.1"
+    "typescript-eslint": "^8.18.0"
   }
 }
