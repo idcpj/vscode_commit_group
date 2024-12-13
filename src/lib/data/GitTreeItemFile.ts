@@ -2,24 +2,30 @@ import * as vscode from 'vscode';
 import { Change } from '../../@type/git';
 import * as path from 'path';
 import { GitTreeItemGroup } from './GitTreeItemGroup';
+import { GitTreeItemFileJson } from '../../@type/type';
 
 export class GitTreeItemFile extends vscode.TreeItem {
-    private change:Change;
+    private filepath:string;
+    private change?:Change;
     private group:GitTreeItemGroup;
     constructor(
-        change:Change,
+        filepath:string,
         group:GitTreeItemGroup,
+        change?:Change,
     ) {
-        super(path.basename(change.uri.fsPath), vscode.TreeItemCollapsibleState.None);
+        super(path.basename(filepath), vscode.TreeItemCollapsibleState.None);
         
         this.group=group;
-        this.change = change;
-        this.tooltip = `${change.status}: ${change.uri.fsPath}`;
+        this.filepath=filepath;
+        if(change){
+            this.change = change;
+        }
+        this.tooltip = `${filepath}`;
         this.contextValue = 'file.draggable';
         
         // 根据文件后缀自动获取图标
         this.iconPath = new vscode.ThemeIcon('file');
-        this.resourceUri = vscode.Uri.file(change.uri.fsPath); // 设置 resourceUri 后 VS Code 会自动根据文件类型显示对应图标
+        this.resourceUri = vscode.Uri.file(filepath); // 设置 resourceUri 后 VS Code 会自动根据文件类型显示对应图标
 
     }
 
@@ -31,13 +37,24 @@ export class GitTreeItemFile extends vscode.TreeItem {
         this.group=group;
     }
 
-    
-    public getChange():Change{
-        return this.change;
+    public setChange(change:Change){
+        this.change=change;
+    }
+
+
+    public getChange():Change|undefined{
+        return this?.change||undefined;
     }
    
     public getFilePath():string{
-        return this.change.uri.fsPath;
+        return this.filepath;
+    }
+
+    public toJson():GitTreeItemFileJson{
+        return {
+            filepath: this.filepath,
+            groupLabel: this.group.getLabel(),
+        };
     }
 
 } 

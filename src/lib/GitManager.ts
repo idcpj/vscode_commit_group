@@ -132,13 +132,20 @@ export class GitManager {
         // 判断文件是否存在
         const oldFile = this.sdk.getGitGroupManager().getFile(change.uri.fsPath);
         if (oldFile ) {
-            // 判断change  状态是否一直
-            if(oldFile.getChange().status === change.status){
+            
+            // 状态一样无需处理
+            if(oldFile.getChange()?.status===change.status){
+                return;
+            }
+
+            // change  不存在,说明是从换成中获取,只需要绑定 status
+            if(oldFile.getChange()?.status===undefined){
+                oldFile.setChange(change);
                 return;
             }
 
             // 删除旧文件
-            this.sdk.getGitGroupManager().removeFile(oldFile.getChange().uri.fsPath);
+            this.sdk.getGitGroupManager().removeFile(oldFile.getFilePath());
         }
 
         // 添加文件到指定分组
@@ -148,6 +155,23 @@ export class GitManager {
         console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
 
         
+    }
+
+    public async getChangeByFilePath(filepath:string){
+        const repository = await this.getRepository();
+        let file = repository.state.indexChanges.find(f => f.uri.fsPath === filepath);
+        if(file){
+            return file;
+        }
+        file = repository.state.workingTreeChanges.find(f => f.uri.fsPath === filepath);
+        if(file){
+            return file;
+        }
+        file = repository.state.untrackedChanges.find(f => f.uri.fsPath === filepath);
+        if(file){
+            return file;
+        }
+        throw new Error(`file ${filepath} not found`);
     }
 
 

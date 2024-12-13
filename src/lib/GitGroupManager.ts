@@ -4,11 +4,12 @@ import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
 import { GitTreeItemFile } from "./data/GitTreeItemFile";
 import { GitTreeItemGroup } from "./data/GitTreeItemGroup";
 import * as vscode from 'vscode';
-import { SdkType } from "../@type/type";
+import { GitTreeItemFileJson, GitTreeItemGroupJson, SdkType } from "../@type/type";
+import { json } from "stream/consumers";
 
 
 export class GitGroupManager {
-    private groups: GitTreeItemGroup[];
+    private groups: GitTreeItemGroup[]=[];
     private fileList: Record<string, GitTreeItemFile> = {};
     private sdk: SdkType;
 
@@ -17,17 +18,9 @@ export class GitGroupManager {
     ) {
 
         this.sdk = sdk;
-
-        this.groups = sdk.getContext().workspaceState.get<GitTreeItemGroup[]>('commit-group.groups', []);
-
-        // 加载文件列表
-        sdk.getContext().workspaceState.get<GitTreeItemFile[]>('commit-group.fileList', []).forEach((file: GitTreeItemFile) => {
-            this.fileList[file.getFilePath()] = file;
-        });
     }
 
     public getGroups(): GitTreeItemGroup[] {
-
         // 未跟踪的分组排最后,激活的分组排最前
         return this.groups.sort((a, b) => a.label === GitGroupName_Untracked ? 1 : b.label === GitGroupName_Untracked ? -1 : a.active ? -1 : b.active ? 1 : 0);
     }
@@ -54,7 +47,10 @@ export class GitGroupManager {
                 group.uncheckActive();
             }
         });
+
+        this.cache_set_groups();
     }
+
     public getActiveGroup(): GitTreeItemGroup | undefined {
         return this.groups.find(group => group.active);
     }
@@ -81,11 +77,10 @@ export class GitGroupManager {
 
         // 如果删除的是激活的group,则激活order最小的group
         if (group?.active && this.groups.length > 0) {
-            const minOrderGroup = this.groups.reduce((prev, curr) =>
-                prev.order < curr.order ? prev : curr
-            );
-            this.activeGroup(minOrderGroup.label);
+            this.activeGroup(this.groups[0].label);
         }
+
+        this.cache_set_groups();
     }
 
     /**
@@ -94,9 +89,6 @@ export class GitGroupManager {
      * @returns 新添加的group的id
      */
     public addGroup(name: string, isActive: boolean = false) {
-        // 生成唯一id
-
-        const id: string = name;
 
         // 名字唯一
         if (this.groupIsExist(name)) {
@@ -104,17 +96,13 @@ export class GitGroupManager {
         }
 
 
-        // 获取最大的order
-        const maxOrder = this.groups.reduce((max, group) =>
-            group.order > max ? group.order : max,
-            0
-        );
-
         // 创建新group
-        const newGroup: GitTreeItemGroup = new GitTreeItemGroup(id, name, maxOrder + 1, isActive);
+        const newGroup: GitTreeItemGroup = new GitTreeItemGroup(name, isActive);
 
         // 添加到groups中
         this.groups.push(newGroup);
+
+        this.cache_set_groups();
 
     }
 
@@ -138,8 +126,12 @@ export class GitGroupManager {
                 }
                 group.removeFile(file);
                 targetGroup.addFile(fileItem);
+
             }
         }
+
+        this.cache_set_groups();
+        this.cache_set_fileList();
 
     }
 
@@ -162,6 +154,9 @@ export class GitGroupManager {
         }
 
         delete this.fileList[filePath];
+
+        this.cache_set_fileList();
+        this.cache_set_groups();
     }
 
     /**
@@ -170,47 +165,100 @@ export class GitGroupManager {
      * @param change 文件变更
      */
     public addFile(groupName: string, change: Change) {
-        const group = this.getGroupByName(groupName);
+        const group = this.getGroupByName(groupName) as GitTreeItemGroup;
         if (!group) {
             console.error("group is null",groupName);
             return;
         }
 
-        const file = new GitTreeItemFile(change, group);
+        const file = new GitTreeItemFile(change.uri.fsPath, group, change);
         group.addFile(file);
         this.fileList[change.uri.fsPath] = file;
+
+        this.cache_set_fileList();
+        this.cache_set_groups();
     }
 
 
+    /**
+     * 在激活的group中添加文件
+     * @param filePath 文件路径
+     */
     public async addFileInActiveGroup(filePath: string) {
         const activeGroup = this.getActiveGroup();
         if (!activeGroup) {
-            console.error("activeGroup is null");
-            return;
+            throw new Error("activeGroup is null");
         }
 
-        const repository = await this.sdk.getGitManager().getRepository();
-        const file = repository.state.indexChanges.find(f => f.uri.fsPath === filePath);
+        const file = await this.sdk.getGitManager().getChangeByFilePath(filePath);
         if (file) {
             this.addFile(activeGroup.label, file);
         }
 
+
     }
 
 
+    // 加载缓存数据,或创建数据
     public relaod() {
-        if (this.groups.length > 0) {
-            this.groups = [];
-            this.fileList = {};
+        // 调试用
+        // this.cache_clear();
+
+        this.groups = this.cache_get_groups();
+        if(this.groups.length==0){
+            this.addGroup(GitGroupName_Working,/* isActive */true);
+            this.addGroup(GitGroupName_Untracked,/* isActive */false);
         }
 
-        
-        this.addGroup(GitGroupName_Working,/* isActive */true);
-        this.addGroup(GitGroupName_Untracked,/* isActive */false);
+        // 加载文件列表
+        this.cache_get_fileList()?.forEach((file: GitTreeItemFile) => {
+            this.fileList[file.getFilePath()] = file;
+            this.groups.find(group=>group.label==file.getGroup()?.label)?.addFile(file);
+        });
 
 
     }
 
-    
+    public cache_get_groups():GitTreeItemGroup[]{
+        const groups = this.sdk.getContext().workspaceState.get<string>('commit-group.groups');
+        if(groups){
+            return JSON.parse(groups).map((item:GitTreeItemGroupJson)=>{
+                return new GitTreeItemGroup(item.label,item.active);
+            });
+        }
 
+
+        return []
+    }
+
+    public cache_get_fileList():GitTreeItemFile[]{
+        const fileList = this.sdk.getContext().workspaceState.get<string>('commit-group.fileList');
+        if(fileList){
+            return JSON.parse(fileList).map((item:GitTreeItemFileJson)=>{
+                const group = this.getGroupByName(item.groupLabel);
+                if(!group){
+                    console.error(`group ${item.groupLabel} not found`);
+                    return;
+                }
+
+                return new GitTreeItemFile(item.filepath,group);
+            });
+        }
+
+        return []
+    }
+
+    public cache_set_groups(){
+        this.sdk.getContext().workspaceState.update('commit-group.groups', JSON.stringify(this.groups.map(group=>group.toJson())));
+    }
+
+    public cache_set_fileList(){
+        this.sdk.getContext().workspaceState.update('commit-group.fileList', JSON.stringify(Object.values(this.fileList).map(file=>file.toJson())));
+    }
+
+    public cache_clear(){
+        this.sdk.getContext().workspaceState.update('commit-group.groups', '');
+        this.sdk.getContext().workspaceState.update('commit-group.fileList', '');
+    }
+ 
 }

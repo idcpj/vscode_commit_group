@@ -21,3 +21,14 @@ export interface SdkType {
 
     refresh(): void;
 }
+
+export interface GitTreeItemFileJson{
+    filepath:string;
+    groupLabel:string;
+}
+
+
+export interface GitTreeItemGroupJson{
+    label:string;
+    active:boolean;
+}
