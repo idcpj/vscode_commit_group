@@ -77,6 +77,11 @@
           "command": "commit-group.addGroup",
           "when": "view == commit-group-view",
           "group": "navigation"
+        },
+        {
+          "command": "commit-group.revealItem",
+          "when": "view == commit-group-view",
+          "group": "navigation"
         }
       ],
       "view/item/context": [

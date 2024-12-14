@@ -167,7 +167,7 @@ export class GitGroupManager {
         }
 
         const file = new GitTreeItemFile(change.uri.fsPath, group, change);
-        console.log("file_add", file.getGroup()?.label, file.getFilePath());
+        // console.log("file_add", file.getGroup()?.label, file.getFilePath());
 
 
         group.addFile(file);

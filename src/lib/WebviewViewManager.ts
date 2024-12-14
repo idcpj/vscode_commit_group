@@ -6,7 +6,6 @@ import { SdkType } from '../@type/type';
 // 创建一个新的 WebviewViewProvider
 export class WebviewViewManager implements vscode.WebviewViewProvider {
     private sdk: SdkType;
-    public static readonly viewType = 'commit-input-view';
 
     constructor(sdk: SdkType) {
         this.sdk = sdk;
@@ -34,7 +33,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
                     console.log("fileList", fileList);
 
-                    // this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    this.sdk.getGitManager().commitByPathList(fileList,data.message);
                 }
             } catch (e: any) {
                 vscode.window.showErrorMessage("提交失败:", e.message);
@@ -76,12 +75,13 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                             color: #888888;
                             font-size: 13px;
                             margin-top: 8px;
+                            margin:
                         }
                     </style>
                 </head>
                 <body>
 
-                    <input type="text" id="commitMessage"placeholder="输入 Git 提交信息..."  >
+                    <input type="text" id="commitMessage" placeholder="输入 Git 提交信息..."  >
 
                     <button id="commitButton">提交</button>
 
@@ -92,6 +92,8 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
                     <script>
                         const vscode = acquireVsCodeApi();
+                        console.log("vscode",vscode);
+                        
                         document.getElementById('commitMessage').addEventListener('keyup', (e) => {
                             if (e.key === 'Enter') {
                                 vscode.postMessage({ 
@@ -100,6 +102,18 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                                 });
                                 e.target.value = '';
                             }
+                        });
+                        
+                        document.getElementById('commitButton').addEventListener('click', (e) => {
+                            const message = document.getElementById('commitMessage');
+                            if(!message){
+                                return;
+                            }
+                            vscode.postMessage({ 
+                                type: 'commit',
+                                message: message.value
+                            });
+                           message.value = '';
                         });
                     </script>
                 </body>

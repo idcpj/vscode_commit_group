@@ -87,7 +87,7 @@ export class GitManager {
 
                 // 监听 Git 状态变化
                 repository.state.onDidChange(async () => {
-                    this.sdk.getGitGroupManager().relaod();
+                    // this.sdk.getGitGroupManager().relaod();
                     await this.loadFileList();
                     this.sdk.getGitGroupManager().cache_save();
 

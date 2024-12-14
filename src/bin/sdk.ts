@@ -36,7 +36,7 @@ export class Sdk implements SdkType {
 
  
     run(){
-        // this.getGitManager().run();
+        this.getGitManager().run();
     }
 
     getWebviewViewManager(): WebviewViewManager {
