@@ -38,13 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // 注册命令
     context.subscriptions.push(
 
-        vscode.commands.registerCommand('commit-group.revealItem', async (item: GitTreeItemFile) => {
-            await treeView.reveal(item, {
-                select: true,
-                focus: true,
-                expand: 1
-            });
-        }),
+        vscode.commands.registerCommand('commit-group.revealItem', sdk.cmd_revealItem.bind(sdk)),
         
         // 刷新命令
         vscode.commands.registerCommand('commit-group.refresh',sdk.cmd_refresh.bind(sdk)),

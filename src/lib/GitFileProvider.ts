@@ -44,7 +44,7 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
             if (!element) {
                 this.sdk.getGitGroupManager().relaod();
                 await this.sdk.getGitManager().loadFileList();
-                const groups= this.sdk.getGitGroupManager().getGroups()
+                const groups= this.sdk.getGitGroupManager().group_lists()
                 return groups;
             }
 

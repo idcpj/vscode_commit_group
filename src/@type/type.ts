@@ -3,6 +3,8 @@ import { GitGroupManager } from "../lib/GitGroupManager";
 import { GitFileTreeDrop } from "../lib/GitFileTreeDrop";
 import { GitManager } from "../lib/GitManager";
 import * as vscode from 'vscode';
+import { GitTreeItemGroup } from "../lib/data/GitTreeItemGroup";
+import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
 
 export interface SdkType {
 
@@ -17,6 +19,8 @@ export interface SdkType {
     getGitFileTreeDrop(): GitFileTreeDrop;
 
     getContext(): vscode.ExtensionContext;
+
+    getTreeView(): vscode.TreeView<GitTreeItemGroup|GitTreeItemFile>;
     
 
     refresh(): void;

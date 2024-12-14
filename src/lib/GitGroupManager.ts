@@ -19,7 +19,7 @@ export class GitGroupManager {
         this.sdk = sdk;
     }
 
-    public getGroups(): GitTreeItemGroup[] {
+    public group_lists(): GitTreeItemGroup[] {
         // 未跟踪的分组排最后,激活的分组排最前
         return this.groups.sort((a, b) => a.label === GitGroupName_Untracked ? 1 : b.label === GitGroupName_Untracked ? -1 : a.active ? -1 : b.active ? 1 : 0);
     }
@@ -30,18 +30,16 @@ export class GitGroupManager {
      * @param name group的名称
      * @returns 指定名称的group
      */
-    public getGroupByName(name: string): GitTreeItemGroup | undefined {
+    public group_groupNamebyName(name: string): GitTreeItemGroup | undefined {
         return this.groups.find(group => group.label === name);
     }
 
-    public getFiles(): GitTreeItemFile[]{
-        return Object.values(this.fileList);
-    }
+
     /**
      * 激活指定id的group
      * @param name group的名称
      */
-    public activeGroup(name: string): void {
+    public group_setActive(name: string): void {
         this.groups.forEach(group => {
             if (group.label === name) {
                 group.checkActive();
@@ -53,16 +51,19 @@ export class GitGroupManager {
         this.cache_set_groups();
     }
 
-    public getActiveGroup(): GitTreeItemGroup | undefined {
+    public group_getActive(): GitTreeItemGroup | undefined {
         return this.groups.find(group => group.active);
     }
 
+    public group_isExist(groupName: string): boolean {
+        return this.group_groupNamebyName(groupName) ? true : false;
+    }
 
     /**
      * 删除指定id的group
      * @param id group的id
      */
-    public deleteGroup(name: string): void {
+    public group_deleteByName(name: string): void {
         //两种类型的不能删除
         if (name === GitGroupName_Working || name === GitGroupName_Untracked) {
             throw new Error('不能删除内置分组');
@@ -79,7 +80,7 @@ export class GitGroupManager {
 
         // 如果删除的是激活的group,则激活order最小的group
         if (group?.active && this.groups.length > 0) {
-            this.activeGroup(this.groups[0].label);
+            this.group_setActive(this.groups[0].label);
         }
 
         this.cache_set_groups();
@@ -90,10 +91,10 @@ export class GitGroupManager {
      * @param name group的名称
      * @returns 新添加的group的id
      */
-    public addGroup(name: string, isActive: boolean = false) {
+    public group_add(name: string, isActive: boolean = false) {
 
         // 名字唯一
-        if (this.groupIsExist(name)) {
+        if (this.group_isExist(name)) {
             throw new Error(`Group ${name} already exists`);
         }
 
@@ -108,8 +109,11 @@ export class GitGroupManager {
 
     }
 
+    public file_lists(): GitTreeItemFile[]{
+        return Object.values(this.fileList);
+    }
 
-    public async moveFile(fileList: string[], targetGroup: GitTreeItemGroup) {
+    public async file_move(fileList: string[], targetGroup: GitTreeItemGroup) {
 
         const repository = await this.sdk.getGitManager().getRepository();
 
@@ -137,20 +141,18 @@ export class GitGroupManager {
 
     }
 
-    public groupIsExist(groupName: string): boolean {
-        return this.getGroupByName(groupName) ? true : false;
-    }
 
-    public fileIsExist(filePath: string): boolean {
+
+    public file_isExist(filePath: string): boolean {
         return this.fileList[filePath] ? true : false;
     }
 
-    public getFile(filePath: string): GitTreeItemFile | undefined {
+    public file_getByPath(filePath: string): GitTreeItemFile | undefined {
         return this.fileList[filePath];
     }
 
-    public removeFile(filePath: string): void {
-        const group = this.getGroupByName(filePath);
+    public file_moveByPath(filePath: string): void {
+        const group = this.group_groupNamebyName(filePath);
         if (group) {
             group.removeFile(filePath);
         }
@@ -166,8 +168,8 @@ export class GitGroupManager {
      * @param groupName 分组名称
      * @param change 文件变更
      */
-    public addFile(groupName: string, change: Change) {
-        const group = this.getGroupByName(groupName) as GitTreeItemGroup;
+    public file_add(groupName: string, change: Change) {
+        const group = this.group_groupNamebyName(groupName) as GitTreeItemGroup;
         if (!group) {
             console.error("group is null",groupName);
             return;
@@ -186,20 +188,20 @@ export class GitGroupManager {
      * 在激活的group中添加文件
      * @param filePath 文件路径
      */
-    public async addFileInActiveGroup(filePath: string,change?:Change) {
-        const activeGroup = this.getActiveGroup();
+    public async file_addInActiveGroup(filePath: string,change?:Change) {
+        const activeGroup = this.group_getActive();
         if (!activeGroup) {
             throw new Error("activeGroup is null");
         }
 
         if(change){
-            this.addFile(activeGroup.label, change);
+            this.file_add(activeGroup.label, change);
             return 
         }
 
         const file = await this.sdk.getGitManager().getChangeByFilePath(filePath);
         if (file) {
-            this.addFile(activeGroup.label, file);
+            this.file_add(activeGroup.label, file);
         }
      
 
@@ -213,8 +215,8 @@ export class GitGroupManager {
 
         this.groups = this.cache_get_groups();
         if(this.groups.length==0){
-            this.addGroup(GitGroupName_Working,/* isActive */true);
-            this.addGroup(GitGroupName_Untracked,/* isActive */false);
+            this.group_add(GitGroupName_Working,/* isActive */true);
+            this.group_add(GitGroupName_Untracked,/* isActive */false);
         }
 
         // 加载文件列表
@@ -242,7 +244,7 @@ export class GitGroupManager {
         const fileList = this.sdk.getContext().workspaceState.get<string>('commit-group.fileList');
         if(fileList){
             return JSON.parse(fileList).map((item:GitTreeItemFileJson)=>{
-                const group = this.getGroupByName(item.groupLabel);
+                const group = this.group_groupNamebyName(item.groupLabel);
                 if(!group){
                     console.error(`group ${item.groupLabel} not found`);
                     return;

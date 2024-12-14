@@ -87,7 +87,7 @@ export class GitManager {
     public async loadFileList() {
         const repository = await this.sdk.getGitManager().getRepository();
 
-        const oldFiles:GitTreeItemFile[] =Object.assign([],this.sdk.getGitGroupManager().getFiles());
+        const oldFiles:GitTreeItemFile[] =Object.assign([],this.sdk.getGitGroupManager().file_lists());
         const needRemoveFiles:string[] = [];
 
         // 未跟踪的文件变更
@@ -140,7 +140,7 @@ export class GitManager {
 
         oldFiles.forEach(file => {
             if(!needRemoveFiles.includes(file.getFilePath())){
-                this.sdk.getGitGroupManager().removeFile(file.getFilePath());
+                this.sdk.getGitGroupManager().file_moveByPath(file.getFilePath());
             }
         });
 
@@ -149,7 +149,7 @@ export class GitManager {
     public addFile(groupName: string, change: Change) {
 
         // 判断文件是否存在
-        const oldFile = this.sdk.getGitGroupManager().getFile(change.uri.fsPath);
+        const oldFile = this.sdk.getGitGroupManager().file_getByPath(change.uri.fsPath);
         if (oldFile) {
             
             // 状态一样无需处理
@@ -166,14 +166,14 @@ export class GitManager {
 
 
             // 删除旧文件
-            this.sdk.getGitGroupManager().removeFile(oldFile.getFilePath());
+            this.sdk.getGitGroupManager().file_moveByPath(oldFile.getFilePath());
         }
 
         // 添加文件到指定分组
         if(groupName===GitGroupName_Untracked){
-            this.sdk.getGitGroupManager().addFile(GitGroupName_Untracked, change);
+            this.sdk.getGitGroupManager().file_add(GitGroupName_Untracked, change);
         }else{
-            this.sdk.getGitGroupManager().addFileInActiveGroup(groupName, change);
+            this.sdk.getGitGroupManager().file_addInActiveGroup(groupName, change);
         }
 
         // console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
