@@ -1,11 +1,10 @@
-import { Change, GitExtension, Repository, Status } from "../@type/git";
+import { Change, GitExtension, Repository, Status, Status } from "../@type/git";
 import { sleep } from "../help/time";
 import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
 import { GitTreeItemFile } from "./data/GitTreeItemFile";
 import { GitTreeItemGroup } from "./data/GitTreeItemGroup";
 import * as vscode from 'vscode';
 import { GitTreeItemFileJson, GitTreeItemGroupJson, SdkType } from "../@type/type";
-import { json } from "stream/consumers";
 
 
 export class GitGroupManager {
@@ -120,13 +119,13 @@ export class GitGroupManager {
             if (fileItem) {
                 const group = fileItem.getGroup();
 
-                if (group?.label == GitGroupName_Untracked) {
-                    // 从未跟踪到跟踪, 添加跟踪
+                // 源是没版本管理,目标是版本管理
+                if(group?.label==GitGroupName_Untracked && targetGroup.label!=GitGroupName_Untracked){
                     await repository.add([file]);
-                } else {
-                    // 从跟踪到未跟踪, 撤销跟踪
+                }else if(group?.label!=GitGroupName_Untracked && targetGroup.label==GitGroupName_Untracked){
                     await repository.revert([file]);
                 }
+
                 group.removeFile(file);
                 targetGroup.addFile(fileItem);
 

@@ -21,16 +21,6 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "commit-group.expandAll",
-        "title": "展开所有",
-        "icon": "$(expand-all)"
-      },
-      {
-        "command": "commit-group.collapseAll",
-        "title": "折叠所有",
-        "icon": "$(collapse-all)"
-      },
-      {
         "command": "commit-group.addGroup",
         "title": "新建分组",
         "icon": "$(add)"
@@ -44,6 +34,11 @@
         "command": "commit-group.activeGroup",
         "title": "切换激活状态",
         "icon": "$(check)"
+      },
+      {
+        "command": "commit-group.revealItem",
+        "title": "树形展开",
+        "icon": "$(file-code)"
       }
     ],
     "viewsContainers": {
@@ -61,7 +56,8 @@
           "id": "commit-group-view",
           "name": "%view.commitGroup.name%",
           "draggable": true,
-          "dragAndDropController": true
+          "dragAndDropController": true,
+          "canSelectMany": true
         }
       ]
     },
@@ -73,17 +69,12 @@
           "group": "navigation"
         },
         {
-          "command": "commit-group.expandAll",
-          "when": "view == commit-group-view",
-          "group": "navigation"
-        },
-        {
-          "command": "commit-group.collapseAll",
-          "when": "view == commit-group-view",
-          "group": "navigation"
-        },
-        {
           "command": "commit-group.addGroup",
+          "when": "view == commit-group-view",
+          "group": "navigation"
+        },
+        {
+          "command": "commit-group.revealItem",
           "when": "view == commit-group-view",
           "group": "navigation"
         }

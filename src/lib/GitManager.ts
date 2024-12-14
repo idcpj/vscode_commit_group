@@ -98,19 +98,18 @@ export class GitManager {
             this.addFile(GitGroupName_Untracked, change);
         }
 
+
         // 暂存区的文件变更
         for (const change of repository.state.indexChanges) {
-            console.log("indexChanges change", change.uri.fsPath);
             needRemoveFiles.push(change.uri.fsPath);
             this.addFile(GitGroupName_Working, change);
         }
 
-
         // 如果是修改后又还原的文件,不在所有的 repository.state 中,进行移除
-
         // 处理工作区更改
         for (const change of repository.state.workingTreeChanges) {
             // console.log("workingTreeChanges change", change.uri.fsPath);
+
 
             needRemoveFiles.push(change.uri.fsPath);
 
@@ -123,15 +122,12 @@ export class GitManager {
                     break;
                 case Status.UNTRACKED:
 
-                    // 忽略 .gitignore 文件
-                    const ignoreFile = await repository.checkIgnore([change.uri.fsPath])
-                    if (ignoreFile.size > 0) {
-                        break;
-                    }
-
+                    // 忽略 .gitignore 文件,无需执行,自动忽略
+                    // const ignoreFile = await repository.checkIgnore([change.uri.fsPath])
+                    // if (ignoreFile.size > 0) {
+                    //     break;
+                    // }
                     
-
-                    console.log("untracked",change.uri.fsPath,change.status);
 
                     this.addFile(GitGroupName_Untracked, change);
 
@@ -180,7 +176,7 @@ export class GitManager {
             this.sdk.getGitGroupManager().addFileInActiveGroup(groupName, change);
         }
 
-        console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
+        // console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
 
         
     }

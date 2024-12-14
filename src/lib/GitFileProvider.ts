@@ -23,10 +23,24 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
         return element;
     }
 
+    getParent(element: GitTreeItemGroup | GitTreeItemFile): GitTreeItemGroup | null {
+        if(element instanceof GitTreeItemGroup){
+            return null;
+        }
+        if(element instanceof GitTreeItemFile){
+            return element.getGroup();
+        }
+        return null;
+    }
+
+    resolveTreeItem(item: GitTreeItemGroup | GitTreeItemFile, element: GitTreeItemGroup | GitTreeItemFile, token: vscode.CancellationToken): vscode.TreeItem | undefined {
+        return item;
+    }
+
     async getChildren(element?: GitTreeItemGroup | GitTreeItemFile) {
 
         try {
-
+            
             if (!element) {
                 this.sdk.getGitGroupManager().relaod();
                 await this.sdk.getGitManager().loadFileList();

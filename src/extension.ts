@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Sdk } from './bin/sdk';
+import { GitTreeItemFile } from './lib/data/GitTreeItemFile';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -21,25 +22,33 @@ export async function activate(context: vscode.ExtensionContext) {
     const treeView = vscode.window.createTreeView('commit-group-view', {
         treeDataProvider: sdk.getGitFileProvider(),
         dragAndDropController: sdk.getGitFileTreeDrop(),
-        // manageCheckboxStateManually: true,
-        // canSelectMany: true,
-        // showCollapseAll: true,
+        canSelectMany: true,
+        showCollapseAll: true,
     });
 
+
+    // treeView.message = '1234';
+    // 标签
+    // treeView.badge = <vscode.ViewBadge>{
+    //     tooltip: `${sdk.getGitGroupManager().getGroups().length}个分组`,
+    //     value: sdk.getGitGroupManager().getGroups().length
+    // };
 
 
     // 注册命令
     context.subscriptions.push(
+
+        vscode.commands.registerCommand('commit-group.revealItem', async (item: GitTreeItemFile) => {
+            await treeView.reveal(item, {
+                select: true,
+                focus: true,
+                expand: 1
+            });
+        }),
+        
         // 刷新命令
         vscode.commands.registerCommand('commit-group.refresh',sdk.cmd_refresh.bind(sdk)),
 
-        // 展开所有命令
-        vscode.commands.registerCommand('commit-group.expandAll', sdk.cmd_expandAll.bind(sdk,treeView)),
-
-        // 折叠所有命令
-        vscode.commands.registerCommand('commit-group.collapseAll', () => {
-            vscode.commands.executeCommand('workbench.actions.treeView.commit-group-view.collapseAll');
-        }),
 
         // 新建分组命令
         vscode.commands.registerCommand('commit-group.addGroup', sdk.cmd_addGroup.bind(sdk)),
@@ -52,16 +61,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     );
 
-
-
-
-    // 监听文件系统变化
-    // const fileSystemWatcher = vscode.workspace.createFileSystemWatcher('**/*');
-    // fileSystemWatcher.onDidChange(() => gitFileProvider.refresh());
-    // fileSystemWatcher.onDidCreate(() => gitFileProvider.refresh());
-    // fileSystemWatcher.onDidDelete(() => gitFileProvider.refresh());
-
-    // context.subscriptions.push(treeView, fileSystemWatcher);
 }
 
 export function deactivate() {
