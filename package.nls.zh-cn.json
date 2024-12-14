@@ -1,5 +1,6 @@
 {
-  "view.commitGroup.title": "提交分组",
+  "view.commitGroup.title": "分组管理",
   "view.commitGroup.name": "提交分组视图",
+  "view.commitGroup.form": "提交",
   "command.refresh": "刷新"
 } 

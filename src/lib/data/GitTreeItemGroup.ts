@@ -67,6 +67,10 @@ export class GitTreeItemGroup extends vscode.TreeItem {
     getLabel():string{
         return this.label;
     }
+
+    getFileList():GitTreeItemFile[]{
+        return this.files;
+    }
     
     toJson():GitTreeItemGroupJson{
         return {

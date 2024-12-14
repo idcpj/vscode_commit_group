@@ -40,16 +40,30 @@ export class GitManager {
 
     private async load() {
 
-        await this.getGitExtension().activate();
-        if (!this.getGitExtension().isActive) {
-            throw new Error('Git extension not found');
-        }
+        return new Promise((resolve, reject) => {
+            setInterval(async () => {
+                await this.getGitExtension().activate();
+                if (!this.getGitExtension().isActive) {
+                    throw new Error('Git extension not found');
+                }
+    
+                this.git = this.getGitExtension().exports.getAPI(1);
+    
+                this.repository = this.git.repositories[0];
+                if(this.repository){
+                    await sleep(1000);
+                    resolve(this.repository);
+                }
+            }, 100);
 
-        this.git = this.getGitExtension().exports.getAPI(1);
+            // 3秒后如果还没有找到仓库,则认为没有找到
+            setTimeout(() => {
+                reject(new Error('Git extension not found'));
+            }, 3000);
 
-        await sleep(1000);
+        })
 
-        this.repository = this.git.repositories[0];
+
 
     }
 
@@ -72,8 +86,12 @@ export class GitManager {
                 }
 
                 // 监听 Git 状态变化
-                repository.state.onDidChange(() => {
-                    this.loadFileList();
+                repository.state.onDidChange(async () => {
+                    this.sdk.getGitGroupManager().relaod();
+                    await this.loadFileList();
+                    this.sdk.getGitGroupManager().cache_save();
+
+
                     this.sdk.refresh();
                 });
 
@@ -87,20 +105,19 @@ export class GitManager {
     public async loadFileList() {
         const repository = await this.sdk.getGitManager().getRepository();
 
-        const oldFiles:GitTreeItemFile[] =Object.assign([],this.sdk.getGitGroupManager().file_lists());
-        const needRemoveFiles:string[] = [];
+        const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGitGroupManager().file_lists());
+        const needRemoveFiles: string[] = [];
 
         // 未跟踪的文件变更
         for (const change of repository.state.untrackedChanges) {
-
             needRemoveFiles.push(change.uri.fsPath);
-
             this.addFile(GitGroupName_Untracked, change);
         }
 
 
         // 暂存区的文件变更
         for (const change of repository.state.indexChanges) {
+            // console.log("change.uri.fsPath ", change.uri.fsPath);
             needRemoveFiles.push(change.uri.fsPath);
             this.addFile(GitGroupName_Working, change);
         }
@@ -118,28 +135,25 @@ export class GitManager {
                 case Status.DELETED:
                 case Status.INTENT_TO_ADD:
                 case Status.TYPE_CHANGED:
+                    // console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
+
                     this.addFile(GitGroupName_Working, change);
                     break;
                 case Status.UNTRACKED:
-
-                    // 忽略 .gitignore 文件,无需执行,自动忽略
-                    // const ignoreFile = await repository.checkIgnore([change.uri.fsPath])
-                    // if (ignoreFile.size > 0) {
-                    //     break;
-                    // }
-                    
 
                     this.addFile(GitGroupName_Untracked, change);
 
                     break;
                 default:
                     // nothing
+                    console.log(`file=${change.uri.fsPath}  status=${change.status}`);
                     break;
             }
         }
 
+        // 修改后又还原的,则需要删除
         oldFiles.forEach(file => {
-            if(!needRemoveFiles.includes(file.getFilePath())){
+            if (!needRemoveFiles.includes(file.getFilePath())) {
                 this.sdk.getGitGroupManager().file_moveByPath(file.getFilePath());
             }
         });
@@ -151,15 +165,15 @@ export class GitManager {
         // 判断文件是否存在
         const oldFile = this.sdk.getGitGroupManager().file_getByPath(change.uri.fsPath);
         if (oldFile) {
-            
+
             // 状态一样无需处理
-            if(oldFile.getChange()?.status===change.status){
+            if (oldFile.getChange()?.status === change.status) {
                 return;
             }
 
 
             // change  不存在,说明是从 cache 中获取,只需要绑定 status
-            if(oldFile.getChange()?.status===undefined){
+            if (oldFile.getChange()?.status === undefined) {
                 oldFile.setChange(change);
                 return;
             }
@@ -170,32 +184,38 @@ export class GitManager {
         }
 
         // 添加文件到指定分组
-        if(groupName===GitGroupName_Untracked){
+        if (groupName === GitGroupName_Untracked) {
             this.sdk.getGitGroupManager().file_add(GitGroupName_Untracked, change);
-        }else{
-            this.sdk.getGitGroupManager().file_addInActiveGroup(groupName, change);
+        } else {
+            this.sdk.getGitGroupManager().file_addInActiveGroup(change.uri.fsPath, change);
         }
 
         // console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
 
-        
+
     }
 
-    public async getChangeByFilePath(filepath:string){
+    public async getChangeByFilePath(filepath: string) {
         const repository = await this.getRepository();
         let file = repository.state.indexChanges.find(f => f.uri.fsPath === filepath);
-        if(file){
+        if (file) {
             return file;
         }
         file = repository.state.workingTreeChanges.find(f => f.uri.fsPath === filepath);
-        if(file){
+        if (file) {
             return file;
         }
         file = repository.state.untrackedChanges.find(f => f.uri.fsPath === filepath);
-        if(file){
+        if (file) {
             return file;
         }
         throw new Error(`file ${filepath} not found`);
+    }
+
+    public async commitByPathList(pathList: string[], message: string) {
+        const repository = await this.getRepository();
+        await repository.add(pathList);
+        await repository.commit(message);
     }
 
 

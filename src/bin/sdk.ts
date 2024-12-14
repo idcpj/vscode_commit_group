@@ -7,6 +7,8 @@ import { SdkType } from "../@type/type";
 import { GitFileTreeDrop } from "../lib/GitFileTreeDrop";
 import { GitTreeItemGroup } from "../lib/data/GitTreeItemGroup";
 import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
+import { TreeViewManager } from "../lib/TreeViewManager";
+import { WebviewViewManager } from "../lib/WebviewViewManager";
 
 export class Sdk implements SdkType {
 
@@ -16,7 +18,8 @@ export class Sdk implements SdkType {
     private gitManager: GitManager;
     private context: vscode.ExtensionContext;
     private gitFileTreeDrop: GitFileTreeDrop;
-    private treeView: vscode.TreeView<GitTreeItemGroup|GitTreeItemFile>;
+    private treeViewManager: TreeViewManager;
+    private webviewViewManager: WebviewViewManager;
 
     constructor(workspaceRoot: string, context: vscode.ExtensionContext) {
         this.workspaceRoot = workspaceRoot;
@@ -25,23 +28,23 @@ export class Sdk implements SdkType {
         this.gitGroupManager = new GitGroupManager(this);
         this.gitFileProvider = new GitFileProvider(this);
         this.gitFileTreeDrop = new GitFileTreeDrop(this);
-        this.treeView = vscode.window.createTreeView('commit-group-view', {
-            treeDataProvider: this.gitFileProvider,
-            dragAndDropController: this.gitFileTreeDrop,
-            canSelectMany: true,
-            showCollapseAll: true,
-        });
+        this.treeViewManager = new TreeViewManager(this);
+        this.webviewViewManager = new WebviewViewManager(this);
 
         this.gitManager = new GitManager(this);
     }
 
  
     run(){
-        this.getGitManager().run();
+        // this.getGitManager().run();
     }
 
-    getTreeView(): vscode.TreeView<GitTreeItemGroup | GitTreeItemFile> {
-        return this.treeView;
+    getWebviewViewManager(): WebviewViewManager {
+        return this.webviewViewManager;
+    }
+
+    getTreeViewManager(): TreeViewManager {
+        return this.treeViewManager;
     }
 
     public getGitFileTreeDrop(): GitFileTreeDrop {
@@ -71,16 +74,16 @@ export class Sdk implements SdkType {
         this.gitFileProvider.refresh();
     }
 
+    webview_form(){
+        return this.getWebviewViewManager();
+    }
+
     cmd_refresh() {
         this.refresh();
     }
 
     async cmd_revealItem(item: GitTreeItemGroup|GitTreeItemFile) {
-        await this.getTreeView().reveal(item, {
-            select: true,
-            focus: true,
-            expand: true
-        });
+        await this.getTreeViewManager().reveal(item);
     }
 
     async cmd_addGroup() {
@@ -95,6 +98,8 @@ export class Sdk implements SdkType {
 
         if (groupName) {
             this.getGitGroupManager().group_add(groupName);
+            this.getGitGroupManager().cache_save();
+            this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
             this.refresh();
         }
     }
@@ -102,6 +107,8 @@ export class Sdk implements SdkType {
     cmd_deleteGroup(item: GitTreeItemGroup) {
         try {
             this.getGitGroupManager().group_deleteByName(item.label);
+            this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
+            this.getGitGroupManager().cache_save();
             this.refresh();
         } catch (e) {
             vscode.window.showErrorMessage(`删除分组失败:${e}`);
@@ -111,6 +118,7 @@ export class Sdk implements SdkType {
     cmd_activeGroup(item: GitTreeItemGroup) {
         try {
             this.getGitGroupManager().group_setActive(item.label);
+            this.getGitGroupManager().cache_save();
             this.refresh();
         } catch (e) {
             vscode.window.showErrorMessage(`切换激活状态失败:${e}`);

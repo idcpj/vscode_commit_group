@@ -45,6 +45,7 @@ export class GitFileTreeDrop implements vscode.TreeDragAndDropController<GitTree
         try {
 
             await this.sdk.getGitGroupManager().file_move(fileList,target);
+            this.sdk.getGitGroupManager().cache_save();
 
             // 刷新视图
             this.sdk.refresh();

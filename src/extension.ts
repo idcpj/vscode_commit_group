@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Sdk } from './bin/sdk';
 import { GitTreeItemFile } from './lib/data/GitTreeItemFile';
 
+
 export async function activate(context: vscode.ExtensionContext) {
 
 
@@ -18,25 +19,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
 
-    // 注册视图
-    const treeView = vscode.window.createTreeView('commit-group-view', {
-        treeDataProvider: sdk.getGitFileProvider(),
-        dragAndDropController: sdk.getGitFileTreeDrop(),
-        canSelectMany: true,
-        showCollapseAll: true,
-    });
-
-
-    // treeView.message = '1234';
-    // 标签
-    // treeView.badge = <vscode.ViewBadge>{
-    //     tooltip: `${sdk.getGitGroupManager().getGroups().length}个分组`,
-    //     value: sdk.getGitGroupManager().getGroups().length
-    // };
-
-
     // 注册命令
     context.subscriptions.push(
+
+        vscode.window.registerWebviewViewProvider( "commit-input-view", sdk.webview_form() ),
 
         vscode.commands.registerCommand('commit-group.revealItem', sdk.cmd_revealItem.bind(sdk)),
         

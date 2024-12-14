@@ -3,8 +3,8 @@ import { GitGroupManager } from "../lib/GitGroupManager";
 import { GitFileTreeDrop } from "../lib/GitFileTreeDrop";
 import { GitManager } from "../lib/GitManager";
 import * as vscode from 'vscode';
-import { GitTreeItemGroup } from "../lib/data/GitTreeItemGroup";
-import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
+import { TreeViewManager } from "../lib/TreeViewManager";
+import { WebviewViewManager } from "../lib/WebviewViewManager";
 
 export interface SdkType {
 
@@ -14,16 +14,19 @@ export interface SdkType {
 
     getGitManager(): GitManager;
 
-    getWorkspaceRoot(): string;
-
     getGitFileTreeDrop(): GitFileTreeDrop;
 
     getContext(): vscode.ExtensionContext;
 
-    getTreeView(): vscode.TreeView<GitTreeItemGroup|GitTreeItemFile>;
+    getTreeViewManager(): TreeViewManager;
+
+    getWebviewViewManager(): WebviewViewManager;
     
 
     refresh(): void;
+
+    getWorkspaceRoot(): string;
+
 }
 
 export interface GitTreeItemFileJson{

@@ -46,12 +46,17 @@
         {
           "id": "commit-group",
           "title": "%view.commitGroup.title%",
-          "icon": "resources/icon.svg"
+          "icon": "$(group-by-ref-type)"
         }
       ]
     },
     "views": {
       "commit-group": [
+        {
+          "type": "webview",
+          "id": "commit-input-view",
+          "name": "%view.commitGroup.form%"
+        },
         {
           "id": "commit-group-view",
           "name": "%view.commitGroup.name%",
@@ -70,11 +75,6 @@
         },
         {
           "command": "commit-group.addGroup",
-          "when": "view == commit-group-view",
-          "group": "navigation"
-        },
-        {
-          "command": "commit-group.revealItem",
           "when": "view == commit-group-view",
           "group": "navigation"
         }
