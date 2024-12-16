@@ -12,18 +12,41 @@ export class GitManager {
     private git: API | undefined;
     private repository: Repository | undefined;
     private sdk: Sdk;
+    // private sourceProvider: vscode.TextDocumentContentProvider;
 
     constructor(sdk: Sdk) {
         this.sdk = sdk;
 
         this.gitExtension = vscode.extensions.getExtension('vscode.git') as vscode.Extension<GitExtension>;
+        // console.log("this.gitExtension ====",this.gitExtension);
+        // console.log("this.gitExtension ====",this.gitExtension.exports.enabled);
+        
+        // // 创建 Virtual Documents Provider
+        // this.sourceProvider = new class implements vscode.TextDocumentContentProvider {
+        //     onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+        //     onDidChange = this.onDidChangeEmitter.event;
+            
+        //     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+        //         const repository = sdk.getGitManager().repository;
+        //         if (!repository) {
+        //             return '';
+        //         }
+        //         // 获取原始文件内容
+        //         return await repository.show(uri.path) || '';
+        //     }
+        // };
+
+        // // 注册 Virtual Documents Provider
+        // sdk.getContext().subscriptions.push(
+        //     vscode.workspace.registerTextDocumentContentProvider('git-original', this.sourceProvider)
+        // );
     }
 
     public async getRepository() {
         if (!this.repository) {
             await this.load();
             if (!this.repository) {
-                throw new Error('No repository found');
+                throw new Error('Git 仓库未初始化!');
             }
         }
 
@@ -32,39 +55,32 @@ export class GitManager {
 
     private getGitExtension() {
         if (!this.gitExtension) {
-            throw new Error('Git extension not found');
+            throw new Error('Git 扩展未激活');
         }
         return this.gitExtension;
     }
 
 
     private async load() {
+        await this.getGitExtension().activate();
+        if (!this.getGitExtension().isActive) {
+            throw new Error('检测到 Git 扩展未激活');
+        }
 
-        return new Promise((resolve, reject) => {
-            setInterval(async () => {
-                await this.getGitExtension().activate();
-                if (!this.getGitExtension().isActive) {
-                    throw new Error('Git extension not found');
-                }
-    
-                this.git = this.getGitExtension().exports.getAPI(1);
-    
-                this.repository = this.git.repositories[0];
-                if(this.repository){
-                    await sleep(1000);
-                    resolve(this.repository);
-                }
-            }, 100);
+        this.git = this.getGitExtension().exports.getAPI(1);
+        await sleep(1000);
 
-            // 3秒后如果还没有找到仓库,则认为没有找到
-            setTimeout(() => {
-                reject(new Error('Git extension not found'));
-            }, 3000);
+        // 是否初始化
+        if(this.git.state === 'uninitialized'){
+            throw new Error('Git 仓库未初始化');
+        }
 
-        })
+        this.repository = this.git.repositories[0];
+        if(this.repository){
+            return this.repository;
+        }
 
-
-
+        throw new Error('Git repository 加载失败');
     }
 
     public async run() {
@@ -78,9 +94,34 @@ export class GitManager {
                     return;
                 }
 
-                await sleep(1000);
+                // await sleep(1000);
 
-                const repository = git.getAPI(1).repositories[0];
+                const gitSelf = git.getAPI(1);
+
+                // 监听 git  是否初始化
+                gitSelf.onDidOpenRepository(async ()=>{
+                    this.sdk.getGitGroupManager().relaod();
+
+                    await this.loadFileList();
+                    this.sdk.getGitGroupManager().cache_save();
+                    
+                    this.sdk.refresh();
+
+                })
+
+                // 监听 git 关闭
+                gitSelf.onDidCloseRepository(async ()=>{
+                    this.sdk.getGitGroupManager().relaod();
+
+                    await this.loadFileList();
+                    this.sdk.getGitGroupManager().cache_save();
+
+                    this.sdk.refresh();
+
+                })
+
+
+                const repository = gitSelf.repositories[0];
                 if (!repository) {
                     return;
                 }
@@ -179,14 +220,17 @@ export class GitManager {
             }
 
 
+            // 只要这个值存在,就不需要处理
             // 删除旧文件
-            this.sdk.getGitGroupManager().file_moveByPath(oldFile.getFilePath());
+            // this.sdk.getGitGroupManager().file_moveByPath(oldFile.getFilePath());
+            return;
         }
+        
 
         // 添加文件到指定分组
-        if (groupName === GitGroupName_Untracked) {
-            this.sdk.getGitGroupManager().file_add(GitGroupName_Untracked, change);
-        } else {
+        if(groupName !==""){
+            this.sdk.getGitGroupManager().file_add(groupName, change);
+        }else{
             this.sdk.getGitGroupManager().file_addInActiveGroup(change.uri.fsPath, change);
         }
 
@@ -218,5 +262,31 @@ export class GitManager {
         await repository.commit(message);
     }
 
+    public async openChange(item: GitTreeItemFile) {
+        const change = item.getChange();
+        if (!change) {
+            throw new Error('没有更改信息');
+        }
+
+        const uri = item.resourceUri;
+        if (uri) {
+
+            const repository = await this.getRepository();
+            const originalContent = await repository.show("HEAD", change.uri.fsPath);
+
+            vscode.commands.executeCommand("vscode.diff", vscode.Uri.file(originalContent), vscode.Uri.file(uri.fsPath), "Comparing Files");
+
+
+            // 使用自定义 scheme 创建原始文件的 Uri
+            // const originalUri = vscode.Uri.parse('git-original:' + uri.path);
+
+            // // 打开差异视图
+            // await vscode.commands.executeCommand('vscode.diff',
+            //     originalUri,     // 原始文件 (Virtual Document)
+            //     uri,            // 当前文件
+            //     `${vscode.workspace.asRelativePath(uri.fsPath)} (更改)`
+            // );
+        }
+    }
 
 }

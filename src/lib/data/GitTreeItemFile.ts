@@ -27,6 +27,12 @@ export class GitTreeItemFile extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon('file');
         this.resourceUri = vscode.Uri.file(filepath); // 设置 resourceUri 后 VS Code 会自动根据文件类型显示对应图标
 
+        // 添加点击命令
+        this.command = {
+            command: 'vscode.open',
+            title: '打开文件',
+            arguments: [vscode.Uri.file(filepath)]
+        };
     }
 
     public getGroup():GitTreeItemGroup{

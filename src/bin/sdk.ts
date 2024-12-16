@@ -41,6 +41,7 @@ export class Sdk implements SdkType {
     }
 
     getWebviewViewManager(): WebviewViewManager {
+        // 如果 git 没有初始化,则不显示
         return this.webviewViewManager;
     }
 
@@ -157,6 +158,16 @@ export class Sdk implements SdkType {
             
         } catch (e) {
             vscode.window.showErrorMessage(`导出文件失败:${e}`);
+        }
+    }
+
+    async cmd_openChange(item: GitTreeItemFile) {
+        try {
+
+            this.getGitManager().openChange(item);
+            
+        } catch (e) {
+            vscode.window.showErrorMessage(`打开更改失败:${e}`);
         }
     }
   

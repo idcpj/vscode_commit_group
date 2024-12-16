@@ -1,4 +1,4 @@
-import { Change } from "../@type/git";
+import { Change, Status } from "../@type/git";
 import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
 import { GitTreeItemFile } from "./data/GitTreeItemFile";
 import { GitTreeItemGroup } from "./data/GitTreeItemGroup";
@@ -143,11 +143,14 @@ export class GitGroupManager {
                 const group = fileItem.getGroup();
 
                 // 源是没版本管理,目标是版本管理
-                if (group?.label == GitGroupName_Untracked && targetGroup.label != GitGroupName_Untracked) {
-                    await repository.add([file]);
-                } else if (group?.label != GitGroupName_Untracked && targetGroup.label == GitGroupName_Untracked) {
-                    await repository.revert([file]);
-                }
+                // if (group?.label == GitGroupName_Untracked && targetGroup.label != GitGroupName_Untracked) {
+                //     await repository.add([file]);
+                // } else if (group?.label != GitGroupName_Untracked && targetGroup.label == GitGroupName_Untracked) {
+                //     // 防止有些文件 未跟踪的,确在 跟踪的列表中
+                //     if(fileItem.getChange()?.status!==Status.UNTRACKED){
+                //         await repository.revert([file]);
+                //     }
+                // }
 
                 group.removeFile(file);
                 targetGroup.addFile(fileItem);
@@ -314,67 +317,70 @@ export class GitGroupManager {
 
     // 加载缓存数据,或创建数据
     public relaod() {
-    // 调试用
+        // 调试用
+        // this.cache_clear();
 
-    this.groups = this.cache_get_groups();
-    if (this.groups.length == 0) {
-        this.group_add(GitGroupName_Working,/* isActive */true);
-        this.group_add(GitGroupName_Untracked,/* isActive */false);
-    }
-
-    // 加载文件列表
-    this.cache_get_fileList()?.forEach(async (file: GitTreeItemFileJson) => {
-
-        const change = await this.sdk.getGitManager().getChangeByFilePath(file.filepath);
-        if (!change) {
-            console.error(`file ${file.filepath} not found`);
-            return;
+        this.groups = this.cache_get_groups();
+        if (this.groups.length == 0) {
+            this.group_add(GitGroupName_Working,/* isActive */true);
+            this.group_add(GitGroupName_Untracked,/* isActive */false);
         }
-        this.file_add(file.groupLabel, change);
 
-    });
+        // 加载文件列表
+        this.cache_get_fileList()?.forEach(async (file: GitTreeItemFileJson) => {
+
+            const change = await this.sdk.getGitManager().getChangeByFilePath(file.filepath);
+            if (!change) {
+                console.error(`file ${file.filepath} not found`);
+                return;
+            }
+            this.file_add(file.groupLabel, change);
+
+        });
 
 
 
-}
+    }
 
     public cache_save() {
-    this.cache_set_groups();
-    this.cache_set_fileList();
-}
+        this.cache_set_groups();
+        this.cache_set_fileList();
+    }
 
     public cache_get_groups(): GitTreeItemGroup[] {
-    const groups = this.sdk.getContext().workspaceState.get<string>('commit-group.groups');
-    if (groups) {
-        return JSON.parse(groups).map((item: GitTreeItemGroupJson) => {
-            return new GitTreeItemGroup(item.label, item.active);
-        });
-    }
+        const groups = this.sdk.getContext().workspaceState.get<string>('commit-group.groups');
+        if (groups) {
+            return JSON.parse(groups).map((item: GitTreeItemGroupJson) => {
+                return new GitTreeItemGroup(item.label, item.active);
+            });
+        }
 
-    return []
-}
+        return []
+    }
 
     public cache_get_fileList(): GitTreeItemFileJson[] {
-    const fileList = this.sdk.getContext().workspaceState.get<string>('commit-group.fileList');
-    if (fileList) {
-        return JSON.parse(fileList);
+        const fileList = this.sdk.getContext().workspaceState.get<string>('commit-group.fileList');
+        if (fileList) {
+            const data = JSON.parse(fileList) as GitTreeItemFileJson[];
+            return data;
+        }
+
+        return []
     }
 
-    return []
-}
-
     public cache_set_groups() {
-    this.sdk.getContext().workspaceState.update('commit-group.groups', JSON.stringify(this.groups.map(group => group.toJson())));
-}
+        this.sdk.getContext().workspaceState.update('commit-group.groups', JSON.stringify(this.groups.map(group => group.toJson())));
+    }
 
     public cache_set_fileList() {
-    this.sdk.getContext().workspaceState.update('commit-group.fileList', JSON.stringify(Object.values(this.fileList).map(file => file.toJson())));
-}
+        const fileList = Object.values(this.fileList).map(file => file.toJson());
+        this.sdk.getContext().workspaceState.update('commit-group.fileList', JSON.stringify(fileList));
+    }
 
     public cache_clear() {
-    this.sdk.getContext().workspaceState.update('commit-group.groups', '');
-    this.sdk.getContext().workspaceState.update('commit-group.fileList', '');
-}
+        this.sdk.getContext().workspaceState.update('commit-group.groups', '');
+        this.sdk.getContext().workspaceState.update('commit-group.fileList', '');
+    }
 
 
 

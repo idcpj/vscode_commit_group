@@ -56,10 +56,7 @@ export class GitTreeItemGroup extends vscode.TreeItem {
     }
 
     removeFile(file: string){
-        const index = this.files.findIndex(f => f.resourceUri?.fsPath === file);
-        if (index !== -1) {
-            this.files.splice(index, 1);
-        }
+        this.files = this.files.filter(f => f.resourceUri?.fsPath !== file);
         this.description = `${this.files.length} 个文件`;
     }
 

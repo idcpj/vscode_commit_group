@@ -13,6 +13,8 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsWelcome": [
+    ],
     "commands": [
       {
         "command": "commit-group.refresh",
@@ -48,6 +50,11 @@
         "command": "commit-group.exportFiles",
         "title": "导出文件",
         "icon": "$(export)"
+      },
+      {
+        "command": "commit-group.openChange",
+        "title": "查看更改",
+        "icon": "$(diff)"
       }
     ],
     "viewsContainers": {
@@ -62,9 +69,10 @@
     "views": {
       "commit-group": [
         {
-          "type": "webview",
           "id": "commit-input-view",
-          "name": "%view.commitGroup.form%"
+          "name": "%view.commitGroup.form%",
+          "type": "webview",
+          "visibility": "visible"
         },
         {
           "id": "commit-group-view",
@@ -92,37 +100,42 @@
         {
           "command": "commit-group.activeGroup",
           "when": "view == commit-group-view && viewItem == group-inactive",
-          "group": "inline@1"
-        },
-        {
-          "command": "commit-group.renameGroup",
-          "when": "view == commit-group-view && viewItem =~ /group-.*active/",
           "group": "inline@2"
         },
         {
-          "command": "commit-group.deleteGroup",
+          "command": "commit-group.renameGroup",
           "when": "view == commit-group-view && viewItem =~ /group-.*active/",
           "group": "inline@3"
         },
         {
+          "command": "commit-group.deleteGroup",
+          "when": "view == commit-group-view && viewItem =~ /group-.*active/",
+          "group": "inline@4"
+        },
+        {
+          "command": "commit-group.openChange",
+          "when": "view == commit-group-view && viewItem == file",
+          "group": "item_navigation@1"
+        },
+        {
           "command": "commit-group.activeGroup",
           "when": "view == commit-group-view && viewItem == group-inactive",
-          "group": "item_navigation@1"
+          "group": "item_navigation@2"
         },
         {
           "command": "commit-group.renameGroup",
           "when": "view == commit-group-view && viewItem =~ /group-.*active/",
-          "group": "item_navigation@2"
+          "group": "item_navigation@3"
         },
         {
           "command": "commit-group.deleteGroup",
           "when": "view == commit-group-view && viewItem =~ /group-.*active/",
-          "group": "item_navigation@3"
+          "group": "item_navigation@4"
         },
         {
           "command": "commit-group.exportFiles",
           "when": "view == commit-group-view && viewItem =~ /group-.*/ || viewItem == file",
-          "group": "item_navigation@4"
+          "group": "item_navigation@5"
         }
       ]
     }

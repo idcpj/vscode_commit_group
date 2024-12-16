@@ -46,6 +46,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // 导出文件命令
         vscode.commands.registerCommand('commit-group.exportFiles', sdk.cmd_exportFiles.bind(sdk)),
 
+        // 打开更改命令
+        vscode.commands.registerCommand('commit-group.openChange', sdk.cmd_openChange.bind(sdk)),
+
     );
 
 }

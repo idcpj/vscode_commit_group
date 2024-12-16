@@ -29,31 +29,31 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
             try {
 
                 if (data.type === "commit") {
-                    let fileList:string[] = [];
+                    let fileList: string[] = [];
 
                     // 如果选中分组,则只检测分组,没选中则使用默认
-                    if(this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()){
+                    if (this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()) {
                         fileList = this.sdk.getTreeViewManager().getSelectedFileList();
-                    }else {
+                    } else {
                         fileList = this.sdk.getGitGroupManager().file_getAcitveGroupFileList();
                     }
-                    
-                    if(fileList.length==0){
+
+                    if (fileList.length == 0) {
                         throw new Error("没有选中文件");
                     }
 
                     // 添加确认框
-                    const confirm = await vscode.window.showInformationMessage("确认提交吗?", "确定", "取消");
-                    if(confirm=="取消"){
-                        return;
-                    }
+                    // const confirm = await vscode.window.showInformationMessage("确认提交吗?", "确定", "取消");
+                    // if (confirm == "取消") {
+                    //     return;
+                    // }
 
                     console.log("fileList", fileList);
 
-                    // this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    this.sdk.getGitManager().commitByPathList(fileList,data.message);
                 }
             } catch (e: any) {
-                vscode.window.showErrorMessage("提交失败:"+e.message, "确定");
+                vscode.window.showErrorMessage("提交失败:" + e.message, "确定");
             }
         });
 
@@ -61,16 +61,15 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
     }
 
-    public setDescription(description: string){
-        if(this.webviewView){
+    public setDescription(description: string) {
+        if (this.webviewView) {
             this.webviewView.description = description;
         }
     }
 
 
     private renderHtml() {
-        return `
-            <!DOCTYPE html>
+        return `<!DOCTYPE html>
             <html>
                 <head>
                     <style>
