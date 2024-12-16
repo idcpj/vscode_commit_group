@@ -39,6 +39,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // 激活分组
         vscode.commands.registerCommand('commit-group.activeGroup',sdk.cmd_activeGroup.bind(sdk)),
 
+        // 重命名分组
+        vscode.commands.registerCommand('commit-group.renameGroup', sdk.cmd_renameGroup.bind(sdk)),
+
     );
 
 }

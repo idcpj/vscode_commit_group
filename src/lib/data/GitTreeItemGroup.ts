@@ -79,4 +79,9 @@ export class GitTreeItemGroup extends vscode.TreeItem {
         };
     }
 
+    public setLabel(label: string) {
+        this.label = label;
+        this.id = label;
+    }
+
 } 

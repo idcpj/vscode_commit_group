@@ -6,6 +6,7 @@ import { SdkType } from '../@type/type';
 // 创建一个新的 WebviewViewProvider
 export class WebviewViewManager implements vscode.WebviewViewProvider {
     private sdk: SdkType;
+    private webviewView: vscode.WebviewView | undefined;
 
     constructor(sdk: SdkType) {
         this.sdk = sdk;
@@ -16,29 +17,54 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
         context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken,
     ) {
+
         webviewView.webview.options = {
             enableScripts: true
         };
 
+
         webviewView.webview.html = this.renderHtml();
 
-        webviewView.webview.onDidReceiveMessage(data => {
+        webviewView.webview.onDidReceiveMessage(async data => {
             try {
 
                 if (data.type === "commit") {
-                    let fileList = this.sdk.getTreeViewManager().getSelectedFileList();
-                    if (fileList.length === 0) {
+                    let fileList:string[] = [];
+
+                    // 如果选中分组,则只检测分组,没选中则使用默认
+                    if(this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()){
+                        fileList = this.sdk.getTreeViewManager().getSelectedFileList();
+                    }else {
                         fileList = this.sdk.getGitGroupManager().file_getAcitveGroupFileList();
+                    }
+                    
+                    if(fileList.length==0){
+                        throw new Error("没有选中文件");
+                    }
+
+                    // 添加确认框
+                    const confirm = await vscode.window.showInformationMessage("确认提交吗?", "确定", "取消");
+                    if(confirm=="取消"){
+                        return;
                     }
 
                     console.log("fileList", fileList);
 
-                    this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    // this.sdk.getGitManager().commitByPathList(fileList,data.message);
                 }
             } catch (e: any) {
-                vscode.window.showErrorMessage("提交失败:", e.message);
+                vscode.window.showErrorMessage("提交失败:"+e.message, "确定");
             }
         });
+
+        this.webviewView = webviewView;
+
+    }
+
+    public setDescription(description: string){
+        if(this.webviewView){
+            this.webviewView.description = description;
+        }
     }
 
 
@@ -71,7 +97,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                             background: #026ec1;
                         }
                             
-                        #tips{
+                        .tips{
                             color: #888888;
                             font-size: 13px;
                             margin-top: 8px;
@@ -80,12 +106,12 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     </style>
                 </head>
                 <body>
-
+                    
                     <input type="text" id="commitMessage" placeholder="输入 Git 提交信息..."  >
 
                     <button id="commitButton">提交</button>
 
-                    <div id="tips">
+                    <div class="tips">
                         1. 提交 commit  时,默认选择激活的分组<br/>
                         2. 如果选中某个分组,则提交 commit 时,提交选中的分组
                     </div>

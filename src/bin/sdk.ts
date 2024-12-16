@@ -37,6 +37,7 @@ export class Sdk implements SdkType {
  
     run(){
         this.getGitManager().run();
+        this.getTreeViewManager().run();
     }
 
     getWebviewViewManager(): WebviewViewManager {
@@ -122,6 +123,29 @@ export class Sdk implements SdkType {
             this.refresh();
         } catch (e) {
             vscode.window.showErrorMessage(`切换激活状态失败:${e}`);
+        }
+    }
+
+    async cmd_renameGroup(item: GitTreeItemGroup) {
+        try {
+            const newName = await vscode.window.showInputBox({
+                placeHolder: '输入新的分组名称并回车',
+                value: item.label,
+                validateInput: (value) => {
+                    if (!value) return '名称不能为空';
+                    if (value === item.label) return null;
+                    if (this.getGitGroupManager().group_isExist(value)) return '分组名称已存在';
+                    return null;
+                }
+            });
+
+            if (newName) {
+                this.getGitGroupManager().group_rename(item.label, newName);
+                this.getGitGroupManager().cache_save();
+                this.refresh();
+            }
+        } catch (e) {
+            vscode.window.showErrorMessage(`重命名分组失败:${e}`);
         }
     }
   
