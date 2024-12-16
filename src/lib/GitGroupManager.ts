@@ -295,8 +295,7 @@ export class GitGroupManager {
 
                 // 复制文件
                 const sourceUri = vscode.Uri.file(filePath);
-                const content = await vscode.workspace.fs.readFile(sourceUri);
-                await vscode.workspace.fs.writeFile(targetUri, content);
+                await vscode.workspace.fs.copy(sourceUri, targetUri);
             } catch (err) {
                 console.error(`Failed to copy file ${filePath}:`, err);
             }
@@ -311,8 +310,6 @@ export class GitGroupManager {
             }
         });
     }
-
-}
 
 
     // 加载缓存数据,或创建数据
