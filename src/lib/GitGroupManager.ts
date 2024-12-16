@@ -103,6 +103,30 @@ export class GitGroupManager {
 
 
     }
+    
+    public group_rename(oldName: string, newName: string): void {
+        // 两种类型的不能重命名
+        if (oldName === GitGroupName_Untracked) {
+            throw new Error('不能重命名内置分组');
+        }
+
+        // 名字唯一
+        if (this.group_isExist(newName)) {
+            throw new Error(`分组 ${newName} 已存在`);
+        }
+
+        const group = this.group_groupNamebyName(oldName);
+        if (!group) {
+            throw new Error(`分组 ${oldName} 不存在`);
+        }
+
+        group.setLabel(newName);
+
+        // 更新文件列表中的分组名称
+        // group.getFileList().forEach(file => {
+        //     file.setGroup(group);
+        // });
+    }
 
     public file_lists(): GitTreeItemFile[] {
         return Object.values(this.fileList);
@@ -273,28 +297,6 @@ export class GitGroupManager {
         this.sdk.getContext().workspaceState.update('commit-group.fileList', '');
     }
 
-    public group_rename(oldName: string, newName: string): void {
-        // 两种类型的不能重命名
-        if (oldName === GitGroupName_Working || oldName === GitGroupName_Untracked) {
-            throw new Error('不能重命名内置分组');
-        }
 
-        // 名字唯一
-        if (this.group_isExist(newName)) {
-            throw new Error(`分组 ${newName} 已存在`);
-        }
-
-        const group = this.group_groupNamebyName(oldName);
-        if (!group) {
-            throw new Error(`分组 ${oldName} 不存在`);
-        }
-
-        group.setLabel(newName);
-
-        // 更新文件列表中的分组名称
-        group.getFileList().forEach(file => {
-            file.setGroup(group);
-        });
-    }
 
 }

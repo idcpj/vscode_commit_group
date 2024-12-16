@@ -33,14 +33,15 @@ export async function activate(context: vscode.ExtensionContext) {
         // 新建分组命令
         vscode.commands.registerCommand('commit-group.addGroup', sdk.cmd_addGroup.bind(sdk)),
 
-        // 删除分组命令
-        vscode.commands.registerCommand('commit-group.deleteGroup',sdk.cmd_deleteGroup.bind(sdk)),
 
         // 激活分组
         vscode.commands.registerCommand('commit-group.activeGroup',sdk.cmd_activeGroup.bind(sdk)),
 
         // 重命名分组
         vscode.commands.registerCommand('commit-group.renameGroup', sdk.cmd_renameGroup.bind(sdk)),
+
+        // 删除分组命令
+        vscode.commands.registerCommand('commit-group.deleteGroup',sdk.cmd_deleteGroup.bind(sdk)),
 
     );
 
