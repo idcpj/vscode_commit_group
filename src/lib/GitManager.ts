@@ -258,6 +258,10 @@ export class GitManager {
 
     public async commitByPathList(pathList: string[], message: string) {
         const repository = await this.getRepository();
+        // 取消 git add 其他文件
+        await repository.revert(this.sdk.getGitGroupManager().file_lists().map(f=>f.getFilePath()));
+
+        // 只对指定文件进行 git add
         await repository.add(pathList);
         await repository.commit(message);
     }
