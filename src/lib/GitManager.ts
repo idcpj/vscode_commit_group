@@ -127,6 +127,10 @@ export class GitManager {
 
     public async loadFileList() {
         const repository = await this.sdk.getGitManager().getRepository();
+        const acitveGroupName=this.sdk.getGitGroupManager().group_getActive()?.label;
+        if(!acitveGroupName){
+            throw new Error('没有找到激活的分组');
+        }
 
         const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGitGroupManager().file_lists());
         const needRemoveFiles: string[] = [];
@@ -142,7 +146,7 @@ export class GitManager {
         for (const change of repository.state.indexChanges) {
             // console.log("change.uri.fsPath ", change.uri.fsPath);
             needRemoveFiles.push(change.uri.fsPath);
-            this.addFile(GitGroupName_Working, change);
+            this.addFile(acitveGroupName, change);
         }
 
         // 如果是修改后又还原的文件,不在所有的 repository.state 中,进行移除
@@ -160,7 +164,7 @@ export class GitManager {
                 case Status.TYPE_CHANGED:
                     // console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
 
-                    this.addFile(GitGroupName_Working, change);
+                    this.addFile(acitveGroupName, change);
                     break;
                 case Status.UNTRACKED:
 
