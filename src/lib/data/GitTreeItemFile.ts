@@ -21,7 +21,7 @@ export class GitTreeItemFile extends vscode.TreeItem {
             this.change = change;
         }
         this.tooltip = `${filepath}`;
-        this.contextValue = 'file.draggable';
+        this.contextValue = 'file';
         
         // 根据文件后缀自动获取图标
         this.iconPath = new vscode.ThemeIcon('file');

@@ -43,6 +43,11 @@
         "command": "commit-group.renameGroup",
         "title": "重命名分组",
         "icon": "$(edit)"
+      },
+      {
+        "command": "commit-group.exportFiles",
+        "title": "导出文件",
+        "icon": "$(export)"
       }
     ],
     "viewsContainers": {
@@ -113,6 +118,11 @@
           "command": "commit-group.deleteGroup",
           "when": "view == commit-group-view && viewItem =~ /group-.*active/",
           "group": "item_navigation@3"
+        },
+        {
+          "command": "commit-group.exportFiles",
+          "when": "view == commit-group-view && viewItem =~ /group-.*/ || viewItem == file",
+          "group": "item_navigation@4"
         }
       ]
     }

@@ -148,5 +148,16 @@ export class Sdk implements SdkType {
             vscode.window.showErrorMessage(`重命名分组失败:${e}`);
         }
     }
+
+    async cmd_exportFiles(item: GitTreeItemGroup | GitTreeItemFile) {
+        try {
+
+            await this.getGitGroupManager().export_files(item);
+
+            
+        } catch (e) {
+            vscode.window.showErrorMessage(`导出文件失败:${e}`);
+        }
+    }
   
 }

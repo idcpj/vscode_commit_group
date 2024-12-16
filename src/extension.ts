@@ -43,6 +43,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // 删除分组命令
         vscode.commands.registerCommand('commit-group.deleteGroup',sdk.cmd_deleteGroup.bind(sdk)),
 
+        // 导出文件命令
+        vscode.commands.registerCommand('commit-group.exportFiles', sdk.cmd_exportFiles.bind(sdk)),
+
     );
 
 }
