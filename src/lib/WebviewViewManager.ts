@@ -51,6 +51,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     console.log("fileList", fileList);
 
                     this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    this.sdk.refresh();
                 }
             } catch (e: any) {
                 vscode.window.showErrorMessage("提交失败:" + e.message, "确定");

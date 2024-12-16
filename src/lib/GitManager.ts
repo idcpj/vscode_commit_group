@@ -99,42 +99,24 @@ export class GitManager {
                 const gitSelf = git.getAPI(1);
 
                 // 监听 git  是否初始化
-                gitSelf.onDidOpenRepository(async ()=>{
-                    this.sdk.getGitGroupManager().relaod();
-
-                    await this.loadFileList();
-                    this.sdk.getGitGroupManager().cache_save();
-                    
+                gitSelf.onDidOpenRepository(async (repository:Repository)=>{
+                 
                     this.sdk.refresh();
+
+                       // 监听 Git 状态变化
+                     repository.state.onDidChange(async () => {
+                        this.sdk.refresh();
+                    });
+
 
                 })
 
                 // 监听 git 关闭
-                gitSelf.onDidCloseRepository(async ()=>{
-                    this.sdk.getGitGroupManager().relaod();
-
-                    await this.loadFileList();
-                    this.sdk.getGitGroupManager().cache_save();
+                gitSelf.onDidCloseRepository(async (repository:Repository)=>{
 
                     this.sdk.refresh();
 
                 })
-
-
-                const repository = gitSelf.repositories[0];
-                if (!repository) {
-                    return;
-                }
-
-                // 监听 Git 状态变化
-                repository.state.onDidChange(async () => {
-                    // this.sdk.getGitGroupManager().relaod();
-                    await this.loadFileList();
-                    this.sdk.getGitGroupManager().cache_save();
-
-
-                    this.sdk.refresh();
-                });
 
 
             });
