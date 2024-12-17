@@ -1,50 +1,31 @@
-## 概述
-目前 vs code 与 IDEA 的差别就是在与 git 的管理中此插件可用于同时管理多个 commit 提交分组,方便再不切换开发分支的情况下,可以平行维护或开发多个功能,并可分别提交指定分组,免
+# Commit Group
 
+[中文文档](README_zh.md)
 
+A VS Code extension for managing Git modified files in groups, allowing you to maintain multiple commit groups simultaneously.
 
-2.添加文件
-3.移动文件
-4.删除文件
-5.删除分组
-6.提交
+## Features
 
+- Support grouping Git modified files
+- Support dragging files between different groups  
+- Support group operations like rename and delete
+- Support committing single group
+- Support committing multiple files in a single group
+- Automatic file tracking status handling
+- Support exporting group file list
+- Support viewing file changes
 
-## TODO
-这是一个 VS Code 扩展项目,主要功能包括:
+## Notes
 
-- [x] 支持对 git 修改文件的分组
-- [x] 如何从[未添加跟踪的分组]移动到其他分组,则自动添加跟踪
-- [x] 从其他分组移动到[未添加跟踪的分组],则自动移除跟踪
-- [x] 删除激活分组,弹框选择下一个激活的分组 (showQuickPick api)
-- [x] 导出当前分组的文件
-- [X] 分组重命名
-- [ ] 支持中,英
-- [x] 优化初始化仓库
-   - [x] 适配仓库从 git  没有初始化到 git 初始化
-   - [x] 适配仓库从 git 初始化到 git 未初始化
-- [x] 添加  [合并时的文件变更] 分组,不能自动删除,文件为空自己清楚,不能设置激活
-- [x] 支持对单个分组进行提交 commit
-   - [x] 禁止对分组中的多个文件,选中后提交,防止误操作
+- Workspace must have initialized Git repository
+- When deleting active group, will prompt to select next active group
+- Merge conflict files will be automatically categorized into specific group
+- Does not support committing multiple files in group at once to prevent mistakes
 
+## Installation
 
-## BUG
-- [x] 移动到其他分组后,在刷新页面,文件不再原来的分组
+Search for "Commit Group" in VS Code extension marketplace.
 
+## License
 
-## 验证
-- [x] 当提交到本地的 commit 存在冲突时
-- [x] 当拉取的文件存在冲突时
-- [x] 修改后又还原的文件,是否移除
-- [x] reset 到某个 commit 时,是否自动存入激活的分支
-
-
-## 二次开发
-先执行监听事件
-```
-pnpm run watch
-```
-
-然后运行调试或按F5
-
-
+MIT
