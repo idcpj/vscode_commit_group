@@ -15,6 +15,10 @@ A VS Code extension for managing Git modified files in groups, allowing you to m
 - Support exporting group file list
 - Support viewing file changes
 
+## Screenshots
+
+![image](docs/imgs/file_show.png)
+
 ## Notes
 
 - Workspace must have initialized Git repository
