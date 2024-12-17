@@ -67,7 +67,7 @@ export class TreeViewManager{
 
     public setTag(groupCount: number) {
         this.treeView.badge = <vscode.ViewBadge>{
-            tooltip: `${groupCount}个分组`,
+            tooltip: groupCount>0?`${groupCount}个分组`:'',
             value: groupCount
         }
 
@@ -108,4 +108,5 @@ export class TreeViewManager{
 
         return fileList;
     }
+
 }

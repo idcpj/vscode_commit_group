@@ -6,6 +6,9 @@ import * as vscode from 'vscode';
 import { TreeViewManager } from "../lib/TreeViewManager";
 import { WebviewViewManager } from "../lib/WebviewViewManager";
 
+
+export type Callback=()=>void;
+
 export interface SdkType {
 
     getGitFileProvider(): GitFileProvider;
@@ -24,6 +27,8 @@ export interface SdkType {
     
 
     refresh(): void;
+
+    afterRun(fn:Callback):void;
 
     getWorkspaceRoot(): string;
 

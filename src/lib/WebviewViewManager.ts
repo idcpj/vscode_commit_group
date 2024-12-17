@@ -18,12 +18,14 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
         _token: vscode.CancellationToken,
     ) {
 
+        this.webviewView = webviewView;
+
         webviewView.webview.options = {
             enableScripts: true
         };
 
+        this.reload();
 
-        webviewView.webview.html = this.renderHtml();
 
         webviewView.webview.onDidReceiveMessage(async data => {
             try {
@@ -42,12 +44,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                         throw new Error("没有选中文件");
                     }
 
-                    // 添加确认框
-                    // const confirm = await vscode.window.showInformationMessage("确认提交吗?", "确定", "取消");
-                    // if (confirm == "取消") {
-                    //     return;
-                    // }
-
+                   
                     console.log("fileList", fileList);
 
                     this.sdk.getGitManager().commitByPathList(fileList,data.message);
@@ -58,14 +55,32 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
             }
         });
 
-        this.webviewView = webviewView;
 
     }
+
+    reload(){
+        if(!this.sdk.getGitManager().isActive()){
+            this.webviewView!.webview.html = this.renderEmptyHtml();
+            return;
+        }
+
+        this.webviewView!.webview.html = this.renderHtml();
+    }
+
 
     public setDescription(description: string) {
         if (this.webviewView) {
             this.webviewView.description = description;
         }
+    }
+
+
+    private renderEmptyHtml(): string {
+        return `
+           <div>
+                当前工作区未初始化 Git 仓库。
+            </div>
+        `;
     }
 
 
@@ -118,7 +133,6 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
                     <script>
                         const vscode = acquireVsCodeApi();
-                        console.log("vscode",vscode);
                         
                         document.getElementById('commitMessage').addEventListener('keyup', (e) => {
                             if (e.key === 'Enter') {

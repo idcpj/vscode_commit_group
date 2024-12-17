@@ -122,35 +122,20 @@ export class GitGroupManager {
 
         group.setLabel(newName);
 
-        // 更新文件列表中的分组名称
-        // group.getFileList().forEach(file => {
-        //     file.setGroup(group);
-        // });
+      
     }
 
     public file_lists(): GitTreeItemFile[] {
         return Object.values(this.fileList);
     }
 
-    public async file_move(fileList: string[], targetGroup: GitTreeItemGroup) {
-
-        const repository = await this.sdk.getGitManager().getRepository();
+    public  file_move(fileList: string[], targetGroup: GitTreeItemGroup) {
 
 
         for (const file of fileList) {
             const fileItem = this.fileList[file];
             if (fileItem) {
                 const group = fileItem.getGroup();
-
-                // 源是没版本管理,目标是版本管理
-                // if (group?.label == GitGroupName_Untracked && targetGroup.label != GitGroupName_Untracked) {
-                //     await repository.add([file]);
-                // } else if (group?.label != GitGroupName_Untracked && targetGroup.label == GitGroupName_Untracked) {
-                //     // 防止有些文件 未跟踪的,确在 跟踪的列表中
-                //     if(fileItem.getChange()?.status!==Status.UNTRACKED){
-                //         await repository.revert([file]);
-                //     }
-                // }
 
                 group.removeFile(file);
                 targetGroup.addFile(fileItem);

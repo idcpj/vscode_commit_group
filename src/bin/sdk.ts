@@ -3,7 +3,7 @@ import { GitFileProvider } from "../lib/GitFileProvider";
 import { GitGroupManager } from "../lib/GitGroupManager";
 import * as vscode from 'vscode';
 import { GitManager } from "../lib/GitManager";
-import { SdkType } from "../@type/type";
+import { Callback, SdkType } from "../@type/type";
 import { GitFileTreeDrop } from "../lib/GitFileTreeDrop";
 import { GitTreeItemGroup } from "../lib/data/GitTreeItemGroup";
 import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
@@ -21,6 +21,9 @@ export class Sdk implements SdkType {
     private treeViewManager: TreeViewManager;
     private webviewViewManager: WebviewViewManager;
 
+    // private isRun=false;
+    private afterRunFn: Callback | undefined;
+
     constructor(workspaceRoot: string, context: vscode.ExtensionContext) {
         this.workspaceRoot = workspaceRoot;
 
@@ -34,9 +37,14 @@ export class Sdk implements SdkType {
         this.gitManager = new GitManager(this);
     }
 
+    afterRun(fn: Callback): void {
+        this.afterRunFn=fn;
+    }
+
+ 
  
     run(){
-        this.getGitManager().run();
+        this.getGitManager().run(this.afterRunFn);
         this.getTreeViewManager().run();
     }
 
@@ -73,8 +81,13 @@ export class Sdk implements SdkType {
     }
 
     refresh() {
-        this.gitFileProvider.refresh();
+        
+        this.getTreeViewManager().setTag(0);
+        this.getWebviewViewManager().reload();
+        this.getGitFileProvider().refresh();
     }
+
+
 
     webview_form(){
         return this.getWebviewViewManager();

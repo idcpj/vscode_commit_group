@@ -11,8 +11,8 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
     // 使用 Map 存储分组信息，便于管理
     private sdk: SdkType;
 
-    constructor(sdk:SdkType) {
-        this.sdk=sdk;
+    constructor(sdk: SdkType) {
+        this.sdk = sdk;
     }
 
     refresh(): void {
@@ -24,10 +24,10 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
     }
 
     getParent(element: GitTreeItemGroup | GitTreeItemFile): GitTreeItemGroup | null {
-        if(element instanceof GitTreeItemGroup){
+        if (element instanceof GitTreeItemGroup) {
             return null;
         }
-        if(element instanceof GitTreeItemFile){
+        if (element instanceof GitTreeItemFile) {
             return element.getGroup();
         }
         return null;
@@ -40,13 +40,18 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
     async getChildren(element?: GitTreeItemGroup | GitTreeItemFile) {
 
         try {
-            
+            // 如果 Git 仓库未初始化,则不显示任何内容
+            if (!this.sdk.getGitManager().isActive()) {
+                return [];
+            }
+
+
             if (!element) {
                 this.sdk.getGitGroupManager().relaod();
                 await this.sdk.getGitManager().loadFileList();
                 this.sdk.getGitGroupManager().cache_save();
 
-                const groups= this.sdk.getGitGroupManager().group_lists()
+                const groups = this.sdk.getGitGroupManager().group_lists()
                 this.sdk.getTreeViewManager().setTag(groups.length);
                 return groups;
             }
@@ -67,7 +72,6 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
             return [];
         }
     }
-
 
 
 
