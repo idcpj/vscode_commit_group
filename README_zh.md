@@ -15,7 +15,7 @@
 
 ## 效果图
 
-![image](docs/imgs/file_show.png)
+![image](/docs/imgs/file_show.png)
 
    
 ## 注意事项
