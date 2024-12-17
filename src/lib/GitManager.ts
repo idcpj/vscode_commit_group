@@ -1,6 +1,6 @@
 import { API, Change, GitExtension, Repository, Status } from "../@type/git";
 import { Sdk } from "../bin/sdk";
-import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
+import { getGroupNameByType, GitGroupName_Untracked, GitGroupName_Working } from "../const";
 import { sleep } from "../help/time";
 import * as vscode from 'vscode';
 import { GitTreeItemFile } from "./data/GitTreeItemFile";
@@ -105,20 +105,22 @@ export class GitManager {
 
     public async loadFileList() {
         const repository =  this.sdk.getGitManager().getRepository();
-        const acitveGroupName = this.sdk.getGitGroupManager().group_getActive()?.label;
+        const acitveGroupName = this.sdk.getGitGroupManager().group_getActive()?.getLabel();
  
 
         const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGitGroupManager().file_lists());
         const needRemoveFiles: string[] = [];
 
+        const untrackedGroupName = this.sdk.getGitGroupManager().group_getByType(GitGroupName_Untracked)?.getLabel()||getGroupNameByType(GitGroupName_Untracked);
+
         // 未跟踪的文件变更
         for (const change of repository.state.untrackedChanges) {
             needRemoveFiles.push(change.uri.fsPath);
-            this._addFile(GitGroupName_Untracked, change);
+            this._addFile(untrackedGroupName, change);
         }
 
 
-        // 暂存区的文���变更
+        // 暂存区的文变更
         for (const change of repository.state.indexChanges) {
             // console.log("change.uri.fsPath ", change.uri.fsPath);
             needRemoveFiles.push(change.uri.fsPath);
@@ -144,7 +146,7 @@ export class GitManager {
                     break;
                 case Status.UNTRACKED:
 
-                    this._addFile(GitGroupName_Untracked, change);
+                    this._addFile(untrackedGroupName, change);
 
                     break;
                 default:

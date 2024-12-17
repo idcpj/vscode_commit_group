@@ -137,10 +137,6 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     <button id="commitButton">${l10n.t('Commit')}</button>
 
                     <div class="tips">
-                        ${l10n.t('1. When committing, the active group is selected by default')}<br/>
-                        ${l10n.t('2. If a group is selected, the selected group is committed when committing')} <br/>
-                        ${l10n.t('3. You can commit the selected files in the group')} <br/>
-
                          <div class="tips-buttom">
                             ${l10n.t('if you have any questions, please')}<a href="https://github.com/idcpj/vscode_commit_group/issues"> ${l10n.t('issues')}</a>
                         </div>

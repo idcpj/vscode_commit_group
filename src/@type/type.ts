@@ -5,6 +5,7 @@ import { GitManager } from "../lib/GitManager";
 import * as vscode from 'vscode';
 import { TreeViewManager } from "../lib/TreeViewManager";
 import { WebviewViewManager } from "../lib/WebviewViewManager";
+import { GroupNameType } from "../const";
 
 
 export type Callback=()=>void;
@@ -40,7 +41,8 @@ export interface GitTreeItemFileJson{
 }
 
 
-export interface GitTreeItemGroupJson{
+export interface GitTreeItemGroupJson{ 
+    type:GroupNameType;
     label:string;
     active:boolean;
 }

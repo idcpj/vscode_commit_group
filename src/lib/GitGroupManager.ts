@@ -1,5 +1,5 @@
 import { Change, Status } from "../@type/git";
-import { GitGroupName_Untracked, GitGroupName_Working } from "../const";
+import { getGroupNameByType, GitGroupName_Untracked, GitGroupName_Working, GroupNameType } from "../const";
 import { GitTreeItemFile } from "./data/GitTreeItemFile";
 import { GitTreeItemGroup } from "./data/GitTreeItemGroup";
 import { GitTreeItemFileJson, GitTreeItemGroupJson, SdkType } from "../@type/type";
@@ -20,7 +20,7 @@ export class GitGroupManager {
 
     public group_lists(): GitTreeItemGroup[] {
         // 未跟踪的分组排最后,激活的分组排最前
-        return this.groups.sort((a, b) => a.label === GitGroupName_Untracked ? 1 : b.label === GitGroupName_Untracked ? -1 : a.active ? -1 : b.active ? 1 : 0);
+        return this.groups.sort((a, b) => a.getType() === GitGroupName_Untracked ? 1 : b.getType() === GitGroupName_Untracked ? -1 : a.active ? -1 : b.active ? 1 : 0);
     }
 
 
@@ -29,8 +29,12 @@ export class GitGroupManager {
      * @param name group的名称
      * @returns 指定名称的group
      */
-    public group_groupNamebyName(name: string): GitTreeItemGroup | undefined {
-        return this.groups.find(group => group.label === name);
+    public group_getByName(name: string): GitTreeItemGroup | undefined {
+        return this.groups.find(group => group.getLabel() === name);
+    }
+
+    public group_getByType(type: GroupNameType): GitTreeItemGroup | undefined {
+        return this.groups.find(group => group.getType() === type);
     }
 
 
@@ -40,7 +44,7 @@ export class GitGroupManager {
      */
     public group_setActive(name: string): void {
         this.groups.forEach(group => {
-            if (group.label === name) {
+            if (group.getLabel() === name) {
                 group.checkActive();
             } else {
                 group.uncheckActive();
@@ -58,30 +62,38 @@ export class GitGroupManager {
     }
 
     public group_isExist(groupName: string): boolean {
-        return this.group_groupNamebyName(groupName) ? true : false;
+        return this.group_getByName(groupName) ? true : false;
     }
+
+  
 
     /**
      * 删除指定id的group
      * @param id group的id
      */
     public group_deleteByName(name: string): void {
-        if (name === GitGroupName_Working || name === GitGroupName_Untracked) {
+      
+        // 判断要删除的是否为激活的group
+        const group = this.groups.find(group => group.getLabel() === name);
+
+        if(!group){
+            throw new Error(vscode.l10n.t('Group Not Found {0}', name));
+        }
+
+        if(group.getType() === GitGroupName_Working || group.getType() === GitGroupName_Untracked){
             throw new Error(vscode.l10n.t('Cannot Delete Built In Group'));
         }
 
-        // 判断要删除的是否为激活的group
-        const group = this.groups.find(group => group.label === name);
-        if (group?.files && group?.files.length > 0) {
+        if (group.files && group.files.length > 0) {
             throw new Error(vscode.l10n.t('Group Not Empty'));
         }
 
         // 先过滤掉要删除的group
-        this.groups = this.groups.filter(group => group.label !== name);
+        this.groups = this.groups.filter(group => group.getLabel() !== name);
 
         // 如果删除的是激活的group,则激活order最小的group
-        if (group?.active && this.groups.length > 0) {
-            this.group_setActive(this.groups[0].label);
+        if (group.active && this.groups.length > 0) {
+            this.group_setActive(this.groups[0].getLabel());
         }
 
     }
@@ -91,8 +103,7 @@ export class GitGroupManager {
      * @param name group的名称
      * @returns 新添加的group的id
      */
-    public group_add(name: string, isActive: boolean = false) {
-
+    public group_add(type: GroupNameType,name:string, isActive: boolean = false) {
         // 名字唯一
         if (this.group_isExist(name)) {
             throw new Error(vscode.l10n.t('Group Name Exists With Name: {0}', name));
@@ -100,7 +111,7 @@ export class GitGroupManager {
 
 
         // 创建新group
-        const newGroup: GitTreeItemGroup = new GitTreeItemGroup(name, isActive);
+        const newGroup: GitTreeItemGroup = new GitTreeItemGroup(type, name, isActive);
 
         // 添加到groups中
         this.groups.push(newGroup);
@@ -109,7 +120,13 @@ export class GitGroupManager {
     }
 
     public group_rename(oldName: string, newName: string): void {
-        if (oldName === GitGroupName_Untracked) {
+        
+        const group = this.group_getByName(oldName)
+        if(!group){
+            throw new Error(vscode.l10n.t('Group Not Found {0}', oldName));
+        }
+        
+        if (group.getType() === GitGroupName_Untracked) {
             throw new Error(vscode.l10n.t('Cannot Rename Built In Group'));
         }
 
@@ -118,10 +135,7 @@ export class GitGroupManager {
             throw new Error(vscode.l10n.t('Group Name Exists With Name: {0}', newName));
         }
 
-        const group = this.group_groupNamebyName(oldName);
-        if (!group) {
-            throw new Error(vscode.l10n.t('Group Not Found {0}', oldName));
-        }
+  
 
         group.setLabel(newName);
 
@@ -160,7 +174,7 @@ export class GitGroupManager {
     }
 
     public file_moveByPath(filePath: string): void {
-        const group = this.group_groupNamebyName(filePath);
+        const group = this.group_getByName(filePath);
         if (group) {
             group.removeFile(filePath);
         }
@@ -175,7 +189,7 @@ export class GitGroupManager {
      * @param change 文件变更
      */
     public file_add(groupName: string, change: Change) {
-        const group = this.group_groupNamebyName(groupName) as GitTreeItemGroup;
+        const group = this.group_getByName(groupName) as GitTreeItemGroup;
         if (!group) {
             console.error(vscode.l10n.t('Group Not Found {0}', groupName));
             return;
@@ -200,13 +214,13 @@ export class GitGroupManager {
         const activeGroup = this.group_getActive();
 
         if (change) {
-            this.file_add(activeGroup.label, change);
+            this.file_add(activeGroup.getLabel(), change);
             return
         }
 
         const file = this.sdk.getGitManager().getChangeByFilePath(filePath);
         if (file) {
-            this.file_add(activeGroup.label, file);
+            this.file_add(activeGroup.getLabel(), file);
         }
 
 
@@ -225,7 +239,7 @@ export class GitGroupManager {
 
         // 如果是分组,导出分组内所有文件
         if (item instanceof GitTreeItemGroup) {
-            group_name = `_${item.label}`;
+            group_name = `_${item.getLabel()}`;
             files = item.getFileList().map(f => f.getFilePath());
         } else {
             // 获取选中的文件
@@ -303,8 +317,8 @@ export class GitGroupManager {
 
         this.groups = this.cache_get_groups();
         if (this.groups.length == 0) {
-            this.group_add(GitGroupName_Working,/* isActive */true);
-            this.group_add(GitGroupName_Untracked,/* isActive */false);
+            this.group_add(GitGroupName_Working,getGroupNameByType(GitGroupName_Working),/* isActive */true);
+            this.group_add(GitGroupName_Untracked,getGroupNameByType(GitGroupName_Untracked),/* isActive */false);
         }
 
         // 加载文件列表
@@ -332,7 +346,7 @@ export class GitGroupManager {
         const groups = this.sdk.getContext().workspaceState.get<string>('commit-group.groups');
         if (groups) {
             return JSON.parse(groups).map((item: GitTreeItemGroupJson) => {
-                return new GitTreeItemGroup(item.label, item.active);
+                return new GitTreeItemGroup(item.type, item.label, item.active);
             });
         }
 

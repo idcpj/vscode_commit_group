@@ -1,27 +1,41 @@
 import * as vscode from 'vscode';
 import { GitTreeItemFile } from './GitTreeItemFile';
 import { Change } from '../../@type/git';
-import { GitGroupName_Untracked } from '../../const';
+import { getGroupNameByType, GitGroupName_Untracked, GitGroupName_Working, GroupNameType as GroupType } from '../../const';
 import { GitTreeItemGroupJson } from '../../@type/type';
 
 export class GitTreeItemGroup extends vscode.TreeItem {
+    private type: GroupType;
+    public active: boolean;
+    public files: GitTreeItemFile[];
+
     constructor(
-        public label: string,
-        public active: boolean=false,
-        public files: GitTreeItemFile[]=[],
+        type: GroupType,
+        label: string,
+        active: boolean=false,
+        files: GitTreeItemFile[]=[],
     ) {
+
+
+
+        if(type == GitGroupName_Untracked){
+            label = getGroupNameByType(type);
+        }
+
+
         super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
         let contextValue = 'group';
 
         // 未跟踪的,不能删除
-        if(label == GitGroupName_Untracked){
+        if(type == GitGroupName_Untracked){
             contextValue = 'group-disabled';
         }else{
             contextValue = active ? 'group-active' : 'group-inactive';
         }
 
 
+        this.type = type;
         this.active = active;
         this.contextValue = contextValue;
         this.id = label;
@@ -60,9 +74,13 @@ export class GitTreeItemGroup extends vscode.TreeItem {
         this.description = vscode.l10n.t('File Count {0}', this.files.length);
     }
 
+    getType():GroupType{
+        return this.type;
+    }
+
     
     getLabel():string{
-        return this.label;
+        return this.label as string;
     }
 
     getFileList():GitTreeItemFile[]{
@@ -71,7 +89,8 @@ export class GitTreeItemGroup extends vscode.TreeItem {
     
     toJson():GitTreeItemGroupJson{
         return {
-            label: this.label,
+            type: this.type,
+            label: this.label as string,
             active: this.active
         };
     }

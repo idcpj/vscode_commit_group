@@ -9,6 +9,7 @@ import { GitTreeItemGroup } from "../lib/data/GitTreeItemGroup";
 import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
 import { TreeViewManager } from "../lib/TreeViewManager";
 import { WebviewViewManager } from "../lib/WebviewViewManager";
+import { GitGroupName_Other } from "../const";
 
 
 
@@ -114,7 +115,7 @@ export class Sdk implements SdkType {
         });
 
         if (groupName) {
-            this.getGitGroupManager().group_add(groupName);
+            this.getGitGroupManager().group_add(GitGroupName_Other,groupName);
             this.getGitGroupManager().cache_save();
             this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
             this.refresh();
@@ -123,7 +124,7 @@ export class Sdk implements SdkType {
 
     cmd_deleteGroup(item: GitTreeItemGroup) {
         try {
-            this.getGitGroupManager().group_deleteByName(item.label);
+            this.getGitGroupManager().group_deleteByName(item.getLabel());
             this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
             this.getGitGroupManager().cache_save();
             this.refresh();
@@ -134,7 +135,7 @@ export class Sdk implements SdkType {
 
     cmd_activeGroup(item: GitTreeItemGroup) {
         try {
-            this.getGitGroupManager().group_setActive(item.label);
+            this.getGitGroupManager().group_setActive(item.getLabel());
             this.getGitGroupManager().cache_save();
             this.refresh();
         } catch (e) {
@@ -146,17 +147,17 @@ export class Sdk implements SdkType {
         try {
             const newName = await vscode.window.showInputBox({
                 placeHolder: vscode.l10n.t('Enter Group Name And Press Enter.rename'),
-                value: item.label,
+                value: item.getLabel(),
                 validateInput: (value) => {
                     if (!value) return vscode.l10n.t('Name Cannot Be Empty');
-                    if (value === item.label) return null;
+                    if (value === item.getLabel()) return null;
                     if (this.getGitGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
                     return null;
                 }
             });
 
             if (newName) {
-                this.getGitGroupManager().group_rename(item.label, newName);
+                this.getGitGroupManager().group_rename(item.getLabel(), newName);
                 this.getGitGroupManager().cache_save();
                 this.refresh();
             }

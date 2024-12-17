@@ -47,16 +47,16 @@ export class TreeViewManager{
             event.selection.forEach(item=>{
                 if(item instanceof GitTreeItemGroup){
                     fileCount += item.files.length;
-                    groupName = item.label;
+                    groupName = item.getLabel();
                     if(isUnTracked===false){
-                        isUnTracked = item.label==GitGroupName_Untracked;
+                        isUnTracked = item.getType()==GitGroupName_Untracked;
                     }
                 }else if(item instanceof GitTreeItemFile){
                     fileCount += 1;
                     groupName='';
                     
                     if(isUnTracked===false){
-                        isUnTracked = item.getGroup().label==GitGroupName_Untracked;
+                        isUnTracked = item.getGroup().getType()==GitGroupName_Untracked;
                     }
                 }
             });
@@ -66,7 +66,7 @@ export class TreeViewManager{
                 return ;
             }
 
-            const groupDesc = groupName ? vscode.l10n.t('Selected Group {0}', groupName) : '';
+            const groupDesc = groupName ? vscode.l10n.t('Selected [{0}] Group,', groupName) : '';
 
             this.sdk.getWebviewViewManager().setDescription(vscode.l10n.t('{0} Selected Files {1}', groupDesc, fileCount));
         });
@@ -89,7 +89,7 @@ export class TreeViewManager{
     }
 
     public selectIsUnTracked():boolean{
-         return this.treeView.selection.some(item=>item instanceof GitTreeItemGroup && item.label==GitGroupName_Untracked);
+         return this.treeView.selection.some(item=>item instanceof GitTreeItemGroup && item.getType()==GitGroupName_Untracked);
     }
 
     public isSelectGroup():boolean{
@@ -104,21 +104,29 @@ export class TreeViewManager{
         const fileList:string[] = [];
 
         let selectGroupName = '';
+
         // 获取选中的群租或部门
         this.treeView.selection.map((item:GitTreeItemGroup|GitTreeItemFile)=>{
             if(item instanceof GitTreeItemGroup){
                 
                 if(selectGroupName==''){
-                    selectGroupName = item.label;
-                }else if(selectGroupName!=item.label){
+                    selectGroupName = item.getLabel();
+                }else if(selectGroupName!=item.getLabel()){
                     throw new Error(vscode.l10n.t('Cannot Select Multiple Groups'));
                 }
 
                 fileList.push(...item.getFileList().map(file=>file.getFilePath()));
             }else if(item instanceof GitTreeItemFile){
+
+                // 不能是未跟踪的分组的文件
+                if(item.getGroup().getType()==GitGroupName_Untracked){
+                    throw new Error(vscode.l10n.t('Cannot Select Untracked Group File'));
+                }
+
+
                 if(selectGroupName==''){
-                    selectGroupName = item.getGroup().label;
-                }else if(selectGroupName!=item.getGroup().label){
+                    selectGroupName = item.getGroup().getLabel();
+                }else if(selectGroupName!=item.getGroup().getLabel()){
                     throw new Error(vscode.l10n.t('Cannot Select Multiple Groups'));
                 }
                 fileList.push(item.getFilePath());
