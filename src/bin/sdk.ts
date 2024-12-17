@@ -173,7 +173,7 @@ export class Sdk implements SdkType {
 
             
         } catch (e) {
-            vscode.window.showErrorMessage(vscode.l10n.t('Export Files Failed {0}', e.toString()));
+            vscode.window.showErrorMessage(vscode.l10n.t('Export Files Failed {0}', e as string));
         }
     }
 
