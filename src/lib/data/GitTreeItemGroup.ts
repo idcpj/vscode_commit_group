@@ -28,7 +28,7 @@ export class GitTreeItemGroup extends vscode.TreeItem {
         this.files = files;
         this.iconPath = active?new vscode.ThemeIcon('check'):new vscode.ThemeIcon('folder');
 
-        this.description = `${this.files.length} 个文件`;
+        this.description = vscode.l10n.t('File Count {0}', this.files.length);
     }
 
     checkActive(){
@@ -46,18 +46,18 @@ export class GitTreeItemGroup extends vscode.TreeItem {
     addFile(file: GitTreeItemFile){
         file.setGroup(this);
         this.files.push(file);
-        this.description = `${this.files.length} 个文件`;
+        this.description = vscode.l10n.t('File Count {0}', this.files.length);
     }
     
 
     addFileByChange(change: Change){
         this.files.push(new GitTreeItemFile(change.uri.fsPath,this,change));
-        this.description = `${this.files.length} 个文件`;
+        this.description = vscode.l10n.t('File Count {0}', this.files.length);
     }
 
     removeFile(file: string){
         this.files = this.files.filter(f => f.resourceUri?.fsPath !== file);
-        this.description = `${this.files.length} 个文件`;
+        this.description = vscode.l10n.t('File Count {0}', this.files.length);
     }
 
     

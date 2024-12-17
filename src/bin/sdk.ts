@@ -10,6 +10,8 @@ import { GitTreeItemFile } from "../lib/data/GitTreeItemFile";
 import { TreeViewManager } from "../lib/TreeViewManager";
 import { WebviewViewManager } from "../lib/WebviewViewManager";
 
+
+
 export class Sdk implements SdkType {
 
     private workspaceRoot: string;
@@ -103,10 +105,10 @@ export class Sdk implements SdkType {
 
     async cmd_addGroup() {
         const groupName = await vscode.window.showInputBox({
-            placeHolder: '输入分组名称并回车',
+            placeHolder: vscode.l10n.t('Enter Group Name And Press Enter'),
             validateInput: (value) => {
-                if (!value) return '名称不能为空';
-                if (this.getGitGroupManager().group_isExist(value)) return '分组名称已存在';
+                if (!value) return vscode.l10n.t('Name Cannot Be Empty');
+                if (this.getGitGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
                 return null;
             }
         });
@@ -126,7 +128,7 @@ export class Sdk implements SdkType {
             this.getGitGroupManager().cache_save();
             this.refresh();
         } catch (e) {
-            vscode.window.showErrorMessage(`删除分组失败:${e}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Delete Group Failed'));
         }
     }
 
@@ -136,19 +138,19 @@ export class Sdk implements SdkType {
             this.getGitGroupManager().cache_save();
             this.refresh();
         } catch (e) {
-            vscode.window.showErrorMessage(`切换激活状态失败:${e}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Switch Active State Failed'));
         }
     }
 
     async cmd_renameGroup(item: GitTreeItemGroup) {
         try {
             const newName = await vscode.window.showInputBox({
-                placeHolder: '输入新的分组名称并回车',
+                placeHolder: vscode.l10n.t('Enter Group Name And Press Enter.rename'),
                 value: item.label,
                 validateInput: (value) => {
-                    if (!value) return '名称不能为空';
+                    if (!value) return vscode.l10n.t('Name Cannot Be Empty');
                     if (value === item.label) return null;
-                    if (this.getGitGroupManager().group_isExist(value)) return '分组名称已存在';
+                    if (this.getGitGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
                     return null;
                 }
             });
@@ -159,7 +161,7 @@ export class Sdk implements SdkType {
                 this.refresh();
             }
         } catch (e) {
-            vscode.window.showErrorMessage(`重命名分组失败:${e}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Rename Group Failed'));
         }
     }
 
@@ -170,7 +172,7 @@ export class Sdk implements SdkType {
 
             
         } catch (e) {
-            vscode.window.showErrorMessage(`导出文件失败:${e}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Export Files Failed {0}', e.toString()));
         }
     }
 
@@ -180,7 +182,7 @@ export class Sdk implements SdkType {
             this.getGitManager().openChange(item);
             
         } catch (e) {
-            vscode.window.showErrorMessage(`打开更改失败:${e}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Open Changes Failed'));
         }
     }
   

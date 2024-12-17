@@ -1,6 +1,15 @@
 {
-  "view.commitGroup.title": "分组管理",
-  "view.commitGroup.name": "提交分组视图",
-  "view.commitGroup.form": "提交",
-  "command.refresh": "刷新"
-} 
+  "view.commitGroup.description": "commit 分组管理",
+  "view.commitGroup.title": "提交分组",
+  "view.commitGroup.form": "提交表单",
+  "view.commitGroup.name": "分组列表",
+  "view.commitGroup.not.initialized": "当前工作区未初始化 Git 仓库。\n[初始化 Git 仓库](command:git.init)",
+  "command.refresh": "刷新",
+  "command.addGroup": "新建分组",
+  "command.deleteGroup": "删除分组",
+  "command.activeGroup": "切换激活状态",
+  "command.renameGroup": "重命名分组",
+  "command.exportFiles": "导出文件",
+  "command.openChange": "查看更改",
+  "command.treeOpen": "树形展开"
+}

@@ -1,7 +1,7 @@
 {
   "name": "commit-group",
-  "displayName": "Commit Group",
-  "description": "Group your commits",
+  "displayName": "%view.commitGroup.title%",
+  "description": "%view.commitGroup.description%",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
@@ -9,56 +9,51 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
+  "l10n": "./l10n",
   "contributes": {
     "viewsWelcome": [
       {
         "view": "commit-group-view",
-        "contents": "当前工作区未初始化 Git 仓库。\n[初始化 Git 仓库](command:git.init)",
+        "contents": "%view.commitGroup.not.initialized%",
         "when": "!git.state.hasRepository"
       }
     ],
     "commands": [
       {
         "command": "commit-group.refresh",
-        "title": "刷新",
+        "title": "%command.refresh%",
         "icon": "$(refresh)"
       },
       {
         "command": "commit-group.addGroup",
-        "title": "新建分组",
+        "title": "%command.addGroup%",
         "icon": "$(add)"
       },
       {
         "command": "commit-group.deleteGroup",
-        "title": "删除分组",
+        "title": "%command.deleteGroup%",
         "icon": "$(trash)"
       },
       {
         "command": "commit-group.activeGroup",
-        "title": "切换激活状态",
+        "title": "%command.activeGroup%",
         "icon": "$(check)"
       },
       {
-        "command": "commit-group.revealItem",
-        "title": "树形展开",
-        "icon": "$(file-code)"
-      },
-      {
         "command": "commit-group.renameGroup",
-        "title": "重命名分组",
+        "title": "%command.renameGroup%",
         "icon": "$(edit)"
       },
       {
         "command": "commit-group.exportFiles",
-        "title": "导出文件",
+        "title": "%command.exportFiles%",
         "icon": "$(export)"
       },
       {
         "command": "commit-group.openChange",
-        "title": "查看更改",
+        "title": "%command.openChange%",
         "icon": "$(diff)"
       }
     ],

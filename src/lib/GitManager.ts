@@ -45,7 +45,7 @@ export class GitManager {
 
     public getRepository() {
         if (!this.repository) {
-            throw new Error('Git 仓库未初始化!');
+            throw new Error(vscode.l10n.t('Workspace Not Initialized As Git'));
         }
 
         return this.repository;
@@ -61,14 +61,14 @@ export class GitManager {
         // 增强 Git 变化监听
         const gitExtension = this.gitExtension;
         if (!gitExtension) {
-            vscode.window.showErrorMessage('Git 扩展未激活');
+            vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Active'));
             return;
         }
 
         gitExtension.activate().then(git => {
 
             if (!git) {
-                vscode.window.showErrorMessage('未找到 Git 扩展');
+                vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Found'));
                 return;
             }
 
@@ -104,11 +104,9 @@ export class GitManager {
 
 
     public async loadFileList() {
-        const repository = await this.sdk.getGitManager().getRepository();
+        const repository =  this.sdk.getGitManager().getRepository();
         const acitveGroupName = this.sdk.getGitGroupManager().group_getActive()?.label;
-        if (!acitveGroupName) {
-            throw new Error('没有找到激活的分组');
-        }
+ 
 
         const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGitGroupManager().file_lists());
         const needRemoveFiles: string[] = [];
@@ -120,7 +118,7 @@ export class GitManager {
         }
 
 
-        // 暂存区的文件变更
+        // 暂存区的文���变更
         for (const change of repository.state.indexChanges) {
             // console.log("change.uri.fsPath ", change.uri.fsPath);
             needRemoveFiles.push(change.uri.fsPath);
@@ -151,7 +149,7 @@ export class GitManager {
                     break;
                 default:
                     // nothing
-                    console.log(`file=${change.uri.fsPath}  status=${change.status}`);
+                    console.error(`file=${change.uri.fsPath}  status=${change.status}`);
                     break;
             }
         }
@@ -200,7 +198,7 @@ export class GitManager {
 
     }
 
-    public  getChangeByFilePath(filepath: string) {
+    public  getChangeByFilePath(filepath: string): Change | undefined {
         const repository = this.getRepository();
         let file = repository.state.indexChanges.find(f => f.uri.fsPath === filepath);
         if (file) {
@@ -214,7 +212,7 @@ export class GitManager {
         if (file) {
             return file;
         }
-        throw new Error(`file ${filepath} not found`);
+        return undefined;
     }
 
     /**
@@ -225,7 +223,17 @@ export class GitManager {
     public async commitByPathList(pathList: string[], message: string) {
         const repository =  this.getRepository();
         // 取消 git add 其他文件
-        await repository.revert(this.sdk.getGitGroupManager().file_lists().map(f => f.getFilePath()));
+        // 如果是 索引的,则变成未索引
+        const waithandle:string[]=[];
+        this.sdk.getGitGroupManager().file_lists().forEach(async f=>{
+            if(f.getChange()?.status!=Status.UNTRACKED){
+                waithandle.push(f.getFilePath())
+            }
+        })
+
+        if(waithandle.length>0){
+            await repository.revert(waithandle);
+        }
 
         // 只对指定文件进行 git add
         await repository.add(pathList);
@@ -235,7 +243,7 @@ export class GitManager {
     public async openChange(item: GitTreeItemFile) {
         const change = item.getChange();
         if (!change) {
-            throw new Error('没有更改信息');
+            throw new Error(vscode.l10n.t('No Changes'));
         }
 
         const uri = item.resourceUri;

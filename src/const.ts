@@ -1,4 +1,6 @@
-export const GitGroupName_Working = '默认';
-export const GitGroupName_Untracked = '未进行版本管理的文件';
-export const GitGroupName_Staged = '暂存区的更改'; // 弃用
+import { l10n } from 'vscode';
+
+export const GitGroupName_Working = l10n.t('Default');
+export const GitGroupName_Untracked = l10n.t('Untracked Files');
+export const GitGroupName_Staged = l10n.t('Temporary Cache');
 

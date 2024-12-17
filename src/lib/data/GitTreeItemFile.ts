@@ -30,7 +30,7 @@ export class GitTreeItemFile extends vscode.TreeItem {
         // 添加点击命令
         this.command = {
             command: 'vscode.open',
-            title: '打开文件',
+            title: vscode.l10n.t('Open File'),
             arguments: [vscode.Uri.file(filepath)]
         };
     }

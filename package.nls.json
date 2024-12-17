@@ -1,6 +1,15 @@
 {
-  "view.commitGroup.title": "Group Management",
-  "view.commitGroup.name": "Commit Group View",
-  "view.commitGroup.form": "Submit COMMIT",
-  "command.refresh": "Refresh"
+  "view.commitGroup.description": "Commit Group Management",
+  "view.commitGroup.title": "Commit Groups",
+  "view.commitGroup.form": "Commit Form",
+  "view.commitGroup.name": "Group List",
+  "view.commitGroup.not.initialized": "Current workspace is not initialized as a Git repository. \n[Initialize Git Repository](command:git.init)",
+  "command.refresh": "Refresh",
+  "command.addGroup": "New Group",
+  "command.deleteGroup": "Delete Group", 
+  "command.activeGroup": "Toggle Active State",
+  "command.renameGroup": "Rename Group",
+  "command.exportFiles": "Export Files",
+  "command.openChange": "View Changes",
+  "command.treeOpen": "Tree Open"
 }

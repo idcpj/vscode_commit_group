@@ -4,6 +4,7 @@ import { GitTreeItemFile } from "./data/GitTreeItemFile";
 import { GitTreeItemGroup } from "./data/GitTreeItemGroup";
 import { GitTreeItemFileJson, GitTreeItemGroupJson, SdkType } from "../@type/type";
 import * as vscode from 'vscode';
+import { formatDate } from "../help/time";
 
 export class GitGroupManager {
     private groups: GitTreeItemGroup[] = [];
@@ -48,8 +49,12 @@ export class GitGroupManager {
 
     }
 
-    public group_getActive(): GitTreeItemGroup | undefined {
-        return this.groups.find(group => group.active);
+    public group_getActive(): GitTreeItemGroup  {
+         const group = this.groups.find(group => group.active);
+         if(!group){
+            throw new Error(vscode.l10n.t('No Active Group'));
+         }
+         return group;
     }
 
     public group_isExist(groupName: string): boolean {
@@ -61,15 +66,14 @@ export class GitGroupManager {
      * @param id group的id
      */
     public group_deleteByName(name: string): void {
-        //两种类型的不能删除
         if (name === GitGroupName_Working || name === GitGroupName_Untracked) {
-            throw new Error('不能删除内置分组');
+            throw new Error(vscode.l10n.t('Cannot Delete Built In Group'));
         }
 
         // 判断要删除的是否为激活的group
         const group = this.groups.find(group => group.label === name);
         if (group?.files && group?.files.length > 0) {
-            throw new Error('group is not empty');
+            throw new Error(vscode.l10n.t('Group Not Empty'));
         }
 
         // 先过滤掉要删除的group
@@ -91,7 +95,7 @@ export class GitGroupManager {
 
         // 名字唯一
         if (this.group_isExist(name)) {
-            throw new Error(`Group ${name} already exists`);
+            throw new Error(vscode.l10n.t('Group Name Exists With Name: {0}', name));
         }
 
 
@@ -105,19 +109,18 @@ export class GitGroupManager {
     }
 
     public group_rename(oldName: string, newName: string): void {
-        // 两种类型的不能重命名
         if (oldName === GitGroupName_Untracked) {
-            throw new Error('不能重命名内置分组');
+            throw new Error(vscode.l10n.t('Cannot Rename Built In Group'));
         }
 
         // 名字唯一
         if (this.group_isExist(newName)) {
-            throw new Error(`分组 ${newName} 已存在`);
+            throw new Error(vscode.l10n.t('Group Name Exists With Name: {0}', newName));
         }
 
         const group = this.group_groupNamebyName(oldName);
         if (!group) {
-            throw new Error(`分组 ${oldName} 不存在`);
+            throw new Error(vscode.l10n.t('Group Not Found {0}', oldName));
         }
 
         group.setLabel(newName);
@@ -174,7 +177,7 @@ export class GitGroupManager {
     public file_add(groupName: string, change: Change) {
         const group = this.group_groupNamebyName(groupName) as GitTreeItemGroup;
         if (!group) {
-            console.error("group is null", groupName);
+            console.error(vscode.l10n.t('Group Not Found {0}', groupName));
             return;
         }
 
@@ -195,16 +198,13 @@ export class GitGroupManager {
      */
     public async file_addInActiveGroup(filePath: string, change?: Change) {
         const activeGroup = this.group_getActive();
-        if (!activeGroup) {
-            throw new Error("没有激活的分组");
-        }
 
         if (change) {
             this.file_add(activeGroup.label, change);
             return
         }
 
-        const file = await this.sdk.getGitManager().getChangeByFilePath(filePath);
+        const file = this.sdk.getGitManager().getChangeByFilePath(filePath);
         if (file) {
             this.file_add(activeGroup.label, file);
         }
@@ -214,9 +214,6 @@ export class GitGroupManager {
 
     public file_getAcitveGroupFileList(): string[] {
         const activeGroup = this.group_getActive();
-        if (!activeGroup) {
-            throw new Error("没有激活的分组");
-        }
         return activeGroup.getFileList().map(file => file.getFilePath());
     }
 
@@ -236,7 +233,7 @@ export class GitGroupManager {
         }
 
         if (files.length === 0) {
-            throw new Error('没有可导出的文件');
+            throw new Error(vscode.l10n.t('No Files To Export'));
         }
 
         // 选择导出目录
@@ -244,17 +241,16 @@ export class GitGroupManager {
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
-            title: '选择导出目录',
+            title: vscode.l10n.t('Select Export Directory'),
             defaultUri: vscode.Uri.file(`${process.env.HOME || process.env.USERPROFILE}/Desktop`)
         });
 
         if (!folderUri || folderUri.length == 0) {
-            throw new Error('没有选择导出目录');
+            throw new Error(vscode.l10n.t('No Export Directory Selected'));
         }
 
         // 创建时间戳目录
-        // 2024-12-16 10:10:10
-        const timestamp = new Date().toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/[/:]/g, '-');
+        const timestamp = formatDate(new Date(), 'YYYY-MM-DD_HH-mm-ss');
 
         // 导出的绝对目录
         const exportRoot = vscode.Uri.joinPath(folderUri[0], `export${group_name}_${timestamp}`);
@@ -290,8 +286,8 @@ export class GitGroupManager {
         }
 
         vscode.window.showInformationMessage(
-            `成功导出 ${files.length} 个文件到 ${exportRoot.fsPath}`,
-            '打开目录'
+            vscode.l10n.t('Export {0} Files To {1}', files.length, exportRoot.fsPath),
+            vscode.l10n.t('Open Directory')
         ).then(selection => {
             if (selection === '打开目录') {
                 vscode.commands.executeCommand('revealFileInOS', exportRoot);
@@ -312,11 +308,11 @@ export class GitGroupManager {
         }
 
         // 加载文件列表
-        this.cache_get_fileList()?.forEach(async (file: GitTreeItemFileJson) => {
+        this.cache_get_fileList()?.forEach( (file: GitTreeItemFileJson) => {
 
-            const change = await this.sdk.getGitManager().getChangeByFilePath(file.filepath);
+            const change = this.sdk.getGitManager().getChangeByFilePath(file.filepath);
             if (!change) {
-                console.error(`file ${file.filepath} not found`);
+                console.log(vscode.l10n.t('File Not Found {0}', file.filepath));
                 return;
             }
             this.file_add(file.groupLabel, change);

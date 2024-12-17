@@ -37,18 +37,19 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
         return item;
     }
 
-    async getChildren(element?: GitTreeItemGroup | GitTreeItemFile) {
+    getChildren(element?: GitTreeItemGroup | GitTreeItemFile) {
 
         try {
             // 如果 Git 仓库未初始化,则不显示任何内容
             if (!this.sdk.getGitManager().isActive()) {
-                return [];
+                console.log(vscode.l10n.t('Workspace Not Initialized As Git'));
+                return 
             }
 
 
             if (!element) {
                 this.sdk.getGitGroupManager().relaod();
-                await this.sdk.getGitManager().loadFileList();
+                this.sdk.getGitManager().loadFileList();
                 this.sdk.getGitGroupManager().cache_save();
 
                 const groups = this.sdk.getGitGroupManager().group_lists()
@@ -62,13 +63,13 @@ export class GitFileProvider implements vscode.TreeDataProvider<GitTreeItemGroup
             }
 
             if (element instanceof GitTreeItemFile) {
-                throw new Error('GitFileItem is not a valid element');
+                throw new Error(vscode.l10n.t('Invalid Git File Item {0}', element.getFilePath()));
             }
             return []
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error getting git changes:', error);
-            vscode.window.showErrorMessage(`Error getting git changes: ${error}`);
+            vscode.window.showErrorMessage(vscode.l10n.t('Failed To Get Git Changes {0}', error.toString()));
             return [];
         }
     }

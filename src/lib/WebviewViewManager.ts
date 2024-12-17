@@ -1,6 +1,6 @@
-
 import * as vscode from 'vscode';
 import { SdkType } from '../@type/type';
+import { l10n } from 'vscode';
 
 
 // 创建一个新的 WebviewViewProvider
@@ -31,8 +31,18 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
             try {
 
                 if (data.type === "commit") {
+
+                    if(data.message.length==0){
+                        throw new Error(vscode.l10n.t('Commit Message Cannot Be Empty'));
+                    }
+
+                    if(this.sdk.getTreeViewManager().selectIsUnTracked()){
+                        throw new Error(vscode.l10n.t('Cannot Commit Untracked Group'));
+                    }
+
                     let fileList: string[] = [];
 
+                  
                     // 如果选中分组,则只检测分组,没选中则使用默认
                     if (this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()) {
                         fileList = this.sdk.getTreeViewManager().getSelectedFileList();
@@ -41,17 +51,15 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     }
 
                     if (fileList.length == 0) {
-                        throw new Error("没有选中文件");
+                        throw new Error(vscode.l10n.t('No Files Selected'));
                     }
 
-                   
-                    console.log("fileList", fileList);
 
                     this.sdk.getGitManager().commitByPathList(fileList,data.message);
                     this.sdk.refresh();
                 }
             } catch (e: any) {
-                vscode.window.showErrorMessage("提交失败:" + e.message, "确定");
+                vscode.window.showErrorMessage(vscode.l10n.t('Commit Failed {0}', e.message), vscode.l10n.t('Confirm'));
             }
         });
 
@@ -78,7 +86,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
     private renderEmptyHtml(): string {
         return `
            <div>
-                当前工作区未初始化 Git 仓库。
+                ${l10n.t('Workspace Not Initialized As Git')}
             </div>
         `;
     }
@@ -116,20 +124,29 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                             color: #888888;
                             font-size: 13px;
                             margin-top: 8px;
-                            margin:
+                        }
+                        .tips-buttom{
+                            margin-top: 12px;
                         }
                     </style>
                 </head>
                 <body>
                     
-                    <input type="text" id="commitMessage" placeholder="输入 Git 提交信息..."  >
+                    <input type="text" id="commitMessage" placeholder="${l10n.t('Enter Git Commit Message')}"  >
 
-                    <button id="commitButton">提交</button>
+                    <button id="commitButton">${l10n.t('Commit')}</button>
 
                     <div class="tips">
-                        1. 提交 commit  时,默认选择激活的分组<br/>
-                        2. 如果选中某个分组,则提交 commit 时,提交选中的分组
+                        ${l10n.t('1. When committing, the active group is selected by default')}<br/>
+                        ${l10n.t('2. If a group is selected, the selected group is committed when committing')} <br/>
+                        ${l10n.t('3. You can commit the selected files in the group')} <br/>
+
+                         <div class="tips-buttom">
+                            ${l10n.t('if you have any questions, please')}<a href="https://github.com/idcpj/vscode_commit_group/issues"> ${l10n.t('issues')}</a>
+                        </div>
                     </div>
+
+                   
 
                     <script>
                         const vscode = acquireVsCodeApi();

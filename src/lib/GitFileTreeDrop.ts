@@ -52,7 +52,7 @@ export class GitFileTreeDrop implements vscode.TreeDragAndDropController<GitTree
             
         } catch (error:any) {
             console.error('拖拽处理失败:', error);
-            vscode.window.showErrorMessage('移动文件失败',{modal:true,detail:error.toString()});
+            vscode.window.showErrorMessage(vscode.l10n.t('Failed To Move File {0}',error.toString()));
         }
     }
 }
