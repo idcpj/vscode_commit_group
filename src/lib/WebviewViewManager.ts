@@ -67,6 +67,10 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
     }
 
     reload(){
+        if(!this.webviewView){
+            return;
+        }
+
         if(!this.sdk.getGitManager().isActive()){
             this.webviewView!.webview.html = this.renderEmptyHtml();
             return;
