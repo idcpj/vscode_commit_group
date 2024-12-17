@@ -17,7 +17,7 @@ A VS Code extension for managing Git modified files in groups, allowing you to m
 
 ## Screenshots
 
-![image](/docs/imgs/file_show.png)
+![image](/docs/imgs/file_show1.png)
 
 ## Notes
 
