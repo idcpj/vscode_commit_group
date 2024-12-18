@@ -65,7 +65,16 @@ export class GitManager {
             return;
         }
 
-        gitExtension.activate().then(git => {
+        // fix:如果新安装的插件,git 已经初始化完成,则直接使用这个
+        if(gitExtension.isActive){
+           const repository = gitExtension?.exports?.getAPI(1)?.repositories?.[0];
+           if(repository){
+            this.repository=repository;
+            fn?.();
+           }
+        }
+
+        gitExtension.activate().then((git:GitExtension) => {
 
             if (!git) {
                 vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Found'));
@@ -140,7 +149,7 @@ export class GitManager {
                 case Status.DELETED:
                 case Status.INTENT_TO_ADD:
                 case Status.TYPE_CHANGED:
-                    // console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
+                    console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
 
                     this._addFile(acitveGroupName, change);
                     break;
