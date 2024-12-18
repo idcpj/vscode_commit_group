@@ -65,50 +65,60 @@ export class GitManager {
             return;
         }
 
+
+        // 如果是监听到激活
+        gitExtension.activate().then((git:GitExtension) => {
+            // vscode.window.showInformationMessage("触发激活");
+            this.listenChange(git,fn);
+        });
+
         // fix:如果新安装的插件,git 已经初始化完成,则直接使用这个
         if(gitExtension.isActive){
-           const repository = gitExtension?.exports?.getAPI(1)?.repositories?.[0];
-           if(repository){
-            this.repository=repository;
-            fn?.();
-           }
-        }
-
-        gitExtension.activate().then((git:GitExtension) => {
-
-            if (!git) {
-                vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Found'));
-                return;
-            }
-
-
-            const gitSelf = git.getAPI(1);
-
-            // 监听 git  是否初始化
-            gitSelf.onDidOpenRepository((repository: Repository) => {
-                this.repository=repository;
-              
-
-                // 监听 Git 状态变化
-                repository.state.onDidChange(async () => {
-                    this.sdk.refresh();
-                });
-
-                fn?.();
-
-            })
-
-            // 监听 git 关闭
-            gitSelf.onDidCloseRepository((repository: Repository) => {
-                this.repository=undefined;
-
+            // vscode.window.showInformationMessage("Git 已激活");
+            this.repository=gitExtension.exports.getAPI(1).repositories[0];
+            this.listenChange(gitExtension.exports,fn);
+            
+             // 监听 Git 状态变化
+            this.repository.state.onDidChange(async () => {
+                // vscode.window.showInformationMessage("Git 状态变化");
                 this.sdk.refresh();
+            });
 
-            })
+            fn?.();
+        }
+      
 
-
-        });
     }
+
+    private listenChange(git:GitExtension,fn:Callback|undefined){
+        if (!git) {
+            vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Found'));
+            return;
+        }
+        const gitSelf = git.getAPI(1);
+
+        // 监听 git  是否初始化
+        gitSelf.onDidOpenRepository((repository: Repository) => {
+
+            this.repository=repository;
+
+            // 监听 Git 状态变化
+            repository.state.onDidChange(async () => {
+                // vscode.window.showInformationMessage("Git 状态变化");
+                this.sdk.refresh();
+            });
+
+            fn?.();
+        })
+
+        // 监听 git 关闭
+        gitSelf.onDidCloseRepository((repository: Repository) => {
+            this.repository=undefined;
+            this.sdk.refresh();
+        })
+
+    }
+
 
 
 
@@ -149,7 +159,7 @@ export class GitManager {
                 case Status.DELETED:
                 case Status.INTENT_TO_ADD:
                 case Status.TYPE_CHANGED:
-                    console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
+                    // console.log("change.uri.fsPath workingTreeChanges ", change.uri.fsPath);
 
                     this._addFile(acitveGroupName, change);
                     break;

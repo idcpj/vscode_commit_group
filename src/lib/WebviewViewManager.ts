@@ -55,7 +55,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     }
 
 
-                    this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    await this.sdk.getGitManager().commitByPathList(fileList,data.message);
                     this.sdk.refresh();
                 }
             } catch (e: any) {
