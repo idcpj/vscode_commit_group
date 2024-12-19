@@ -1,17 +1,27 @@
 {
   "name": "commit-group",
-  "displayName": "%view.commitGroup.title%",
-  "description": "%view.commitGroup.description%",
+  "displayName": "Git Commit Group",
+  "description": "A VS Code extension for managing Git modified files in groups, allowing you to maintain multiple commit groups simultaneously.",
   "repository": {
     "type": "git",
     "url": "https://github.com/idcpj/vscode_commit_group"
   },
-  "version": "0.0.6",
+  "author": {
+    "name": "idcpj"
+  },
+  "version": "0.0.7",
   "license": "MIT",
   "publisher": "idcpj",
   "engines": {
     "vscode": "^1.80.0"
   },
+  "keywords":["git","commit","group","vscode","extension"],
+  "bugs": {
+    "url": "https://github.com/idcpj/vscode_commit_group/issues",
+    "email": "260083304@qq.com"
+  },
+
+  "homepage":"https://github.com/idcpj/vscode_commit_group/blob/main/README.md",
   "categories": [
     "Other"
   ],
@@ -19,6 +29,7 @@
     "onLanguage:git",
     "workspaceContains:.git"
   ],
+  "icon": "resources/logo.jpg",
   "main": "./out/extension.js",
   "l10n": "./l10n",
   "contributes": {
@@ -154,7 +165,6 @@
       ]
     }
   },
-
   "extensionDependencies": [
     "vscode.git"
   ],

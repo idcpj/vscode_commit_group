@@ -1,6 +1,5 @@
 {
-  "view.commitGroup.description": "Commit Group Management",
-  "view.commitGroup.title": "Commit Groups",
+  "view.commitGroup.title": "Commit Group",
   "view.commitGroup.form": "Commit Form",
   "view.commitGroup.name": "Group List",
   "view.commitGroup.not.initialized": "Current workspace is not initialized as a Git repository. \n[Initialize Git Repository](command:git.init)",
