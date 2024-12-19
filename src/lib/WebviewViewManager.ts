@@ -47,7 +47,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     if (this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()) {
                         fileList = this.sdk.getTreeViewManager().getSelectedFileList();
                     } else {
-                        fileList = this.sdk.getGitGroupManager().file_getAcitveGroupFileList();
+                        fileList = this.sdk.getGroupManager().file_getAcitveGroupFileList();
                     }
 
                     if (fileList.length == 0) {
@@ -56,7 +56,12 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
 
                     await this.sdk.getGitManager().commitByPathList(fileList,data.message);
+
+
                     this.sdk.refresh();
+                    
+                }else{
+                    throw new Error(vscode.l10n.t('Invalid data type'));
                 }
             } catch (e: any) {
                 vscode.window.showErrorMessage(vscode.l10n.t('Commit Failed {0}', e.message), vscode.l10n.t('Confirm'));
@@ -136,7 +141,7 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                 </head>
                 <body>
                     
-                    <input type="text" id="commitMessage" placeholder="${l10n.t('Enter Git Commit Message')}"  >
+                    <input type="text" id="commitMessage"  placeholder="${l10n.t('Enter Git Commit Message')}"  >
 
                     <button id="commitButton">${l10n.t('Commit')}</button>
 
@@ -150,7 +155,16 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
                     <script>
                         const vscode = acquireVsCodeApi();
+
+                      
+                        window.addEventListener('load',()=>{
+                            const state = vscode.getState();
+                            if(state){
+                                document.getElementById('commitMessage').value = state.value;
+                            }
+                        });
                         
+
                         document.getElementById('commitMessage').addEventListener('keyup', (e) => {
                             if (e.key === 'Enter') {
                                 vscode.postMessage({ 
@@ -158,8 +172,14 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                                     message: e.target.value 
                                 });
                                 e.target.value = '';
+                                vscode.setState({ value: '' });
                             }
                         });
+
+                        document.getElementById('commitMessage').addEventListener('input', (e) => {
+                            vscode.setState({ value: e.target.value });
+                        });
+
                         
                         document.getElementById('commitButton').addEventListener('click', (e) => {
                             const message = document.getElementById('commitMessage');

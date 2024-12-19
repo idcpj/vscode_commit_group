@@ -14,6 +14,7 @@ A VS Code extension for managing Git modified files in groups, allowing you to m
 - Automatic file tracking status handling
 - Support exporting group file list
 - Support viewing file changes
+- Support moving multiple files to other groups
 
 ## Screenshots
 

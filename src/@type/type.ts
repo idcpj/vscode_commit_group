@@ -1,5 +1,5 @@
 import { GitFileProvider } from "../lib/GitFileProvider";
-import { GitGroupManager } from "../lib/GitGroupManager";
+import { GitGroupManager } from "../lib/GroupManager";
 import { GitFileTreeDrop } from "../lib/GitFileTreeDrop";
 import { GitManager } from "../lib/GitManager";
 import * as vscode from 'vscode';
@@ -14,7 +14,7 @@ export interface SdkType {
 
     getGitFileProvider(): GitFileProvider;
 
-    getGitGroupManager(): GitGroupManager;
+    getGroupManager(): GitGroupManager;
 
     getGitManager(): GitManager;
 
@@ -28,8 +28,6 @@ export interface SdkType {
     
 
     refresh(): void;
-
-    afterRun(fn:Callback):void;
 
     getWorkspaceRoot(): string;
 

@@ -11,5 +11,6 @@
   "command.renameGroup": "Rename Group",
   "command.exportFiles": "Export Files",
   "command.openChange": "View Changes",
-  "command.treeOpen": "Tree Open"
+  "command.treeOpen": "Tree Open",
+  "command.moveToGroup": "Move to Group"
 }

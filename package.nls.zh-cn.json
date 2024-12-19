@@ -11,5 +11,6 @@
   "command.renameGroup": "重命名分组",
   "command.exportFiles": "导出文件",
   "command.openChange": "查看更改",
-  "command.treeOpen": "树形展开"
+  "command.treeOpen": "树形展开",
+  "command.moveToGroup": "移动到其他分组"
 }

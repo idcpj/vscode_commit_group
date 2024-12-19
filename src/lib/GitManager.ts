@@ -56,7 +56,7 @@ export class GitManager {
     }
 
 
-    public async run(fn:Callback|undefined) {
+    public async run() {
 
         // 增强 Git 变化监听
         const gitExtension = this.gitExtension;
@@ -69,28 +69,27 @@ export class GitManager {
         // 如果是监听到激活
         gitExtension.activate().then((git:GitExtension) => {
             // vscode.window.showInformationMessage("触发激活");
-            this.listenChange(git,fn);
+            this.listenChange(git);
         });
 
         // fix:如果新安装的插件,git 已经初始化完成,则直接使用这个
         if(gitExtension.isActive){
             // vscode.window.showInformationMessage("Git 已激活");
             this.repository=gitExtension.exports.getAPI(1).repositories[0];
-            this.listenChange(gitExtension.exports,fn);
+            this.listenChange(gitExtension.exports);
             
              // 监听 Git 状态变化
-            this.repository.state.onDidChange(async () => {
+            this.repository?.state?.onDidChange(async () => {
                 // vscode.window.showInformationMessage("Git 状态变化");
                 this.sdk.refresh();
             });
 
-            fn?.();
         }
       
 
     }
 
-    private listenChange(git:GitExtension,fn:Callback|undefined){
+    private listenChange(git:GitExtension){
         if (!git) {
             vscode.window.showErrorMessage(vscode.l10n.t('Git Extension Not Found'));
             return;
@@ -108,7 +107,6 @@ export class GitManager {
                 this.sdk.refresh();
             });
 
-            fn?.();
         })
 
         // 监听 git 关闭
@@ -124,13 +122,13 @@ export class GitManager {
 
     public async loadFileList() {
         const repository =  this.sdk.getGitManager().getRepository();
-        const acitveGroupName = this.sdk.getGitGroupManager().group_getActive()?.getLabel();
+        const acitveGroupName = this.sdk.getGroupManager().group_getActive()?.getLabel();
  
 
-        const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGitGroupManager().file_lists());
+        const oldFiles: GitTreeItemFile[] = Object.assign([], this.sdk.getGroupManager().file_lists());
         const needRemoveFiles: string[] = [];
 
-        const untrackedGroupName = this.sdk.getGitGroupManager().group_getByType(GitGroupName_Untracked)?.getLabel()||getGroupNameByType(GitGroupName_Untracked);
+        const untrackedGroupName = this.sdk.getGroupManager().group_getByType(GitGroupName_Untracked)?.getLabel()||getGroupNameByType(GitGroupName_Untracked);
 
         // 未跟踪的文件变更
         for (const change of repository.state.untrackedChanges) {
@@ -178,7 +176,7 @@ export class GitManager {
         // 修改后又还原的,则需要删除
         oldFiles.forEach(file => {
             if (!needRemoveFiles.includes(file.getFilePath())) {
-                this.sdk.getGitGroupManager().file_moveByPath(file.getFilePath());
+                this.sdk.getGroupManager().file_moveByPath(file.getFilePath());
             }
         });
 
@@ -187,7 +185,7 @@ export class GitManager {
     private _addFile(groupName: string, change: Change) {
 
         // 判断文件是否存在
-        const oldFile = this.sdk.getGitGroupManager().file_getByPath(change.uri.fsPath);
+        const oldFile = this.sdk.getGroupManager().file_getByPath(change.uri.fsPath);
         if (oldFile) {
 
             // 状态一样无需处理
@@ -209,9 +207,9 @@ export class GitManager {
 
         // 添加文件到指定分组
         if (groupName !== "") {
-            this.sdk.getGitGroupManager().file_add(groupName, change);
+            this.sdk.getGroupManager().file_add(groupName, change);
         } else {
-            this.sdk.getGitGroupManager().file_addInActiveGroup(change.uri.fsPath, change);
+            this.sdk.getGroupManager().file_addInActiveGroup(change.uri.fsPath, change);
         }
 
         // console.log("this.sdk.getGitGroupManager().getGroups()",this.sdk.getGitGroupManager().getGroups());
@@ -246,7 +244,7 @@ export class GitManager {
         // 取消 git add 其他文件
         // 如果是 索引的,则变成未索引
         const waithandle:string[]=[];
-        this.sdk.getGitGroupManager().file_lists().forEach(async f=>{
+        this.sdk.getGroupManager().file_lists().forEach(async f=>{
             if(f.getChange()?.status!=Status.UNTRACKED){
                 waithandle.push(f.getFilePath())
             }

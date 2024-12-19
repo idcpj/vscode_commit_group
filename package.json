@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/idcpj/vscode_commit_group"
   },
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "publisher": "idcpj",
   "engines": {
@@ -64,6 +64,11 @@
         "command": "commit-group.openChange",
         "title": "%command.openChange%",
         "icon": "$(diff)"
+      },
+      {
+        "command": "commit-group.moveToGroup",
+        "title": "%command.moveToGroup%",
+        "icon": "$(move)"
       }
     ],
     "viewsContainers": {
@@ -140,6 +145,11 @@
           "command": "commit-group.exportFiles",
           "when": "view == commit-group-view && viewItem =~ /group-.*/ || viewItem == file",
           "group": "item_navigation@5"
+        },
+        {
+          "command": "commit-group.moveToGroup",
+          "when": "view == commit-group-view && viewItem == file",
+          "group": "item_navigation@6"
         }
       ]
     }

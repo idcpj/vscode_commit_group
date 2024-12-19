@@ -99,7 +99,7 @@ export class TreeViewManager{
         return this.treeView.selection.some(item=>item instanceof GitTreeItemFile);
     }
 
-    // 获取选中的群租或部门
+    // 获取选中的群租或部门,但是不能再都个分组中
     public getSelectedFileList():string[]{
         const fileList:string[] = [];
 
@@ -133,6 +133,17 @@ export class TreeViewManager{
             }
         });
 
+        return fileList;
+    }
+
+    // 获取选中的文件列表,可以多个分组中
+    public getSelectedFileListMultiGroup():string[]{
+        const fileList:string[] = [];
+        this.treeView.selection.map(item=>{
+            if(item instanceof GitTreeItemFile){
+                fileList.push(item.getFilePath());
+            }
+        });
         return fileList;
     }
 

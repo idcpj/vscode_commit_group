@@ -21,6 +21,8 @@
     "Cannot Commit Untracked Group": "不能提交内置的未跟踪文件分组",
     "Commit Message Cannot Be Empty": "提交信息不能为空",
     "No Files Selected": "没有选中文件",
+    "Source Group Not Found": "分组不存在",
+    "Select Target Group": "选择目标分组",
     "Commit Failed {0}": "提交失败: {0}",
     "Enter Group Name And Press Enter": "输入分组名称并回车",
     "Enter New Group Name And Press Enter": "输入新的分组名称并回车",
@@ -51,5 +53,7 @@
     "1. When committing, the active group is selected by default": "1. 提交 commit 时,默认选择激活的分组",
     "2. If a group is selected, the selected group is committed when committing": "2. 如果选中某个分组,则提交 commit 时,提交选中的分组",
     "3. You can commit the selected files in the group": "3. 可单独提交分组中的选中文件",
-    "if you have any questions, please": "如果存在问题,欢迎"
+    "if you have any questions, please": "如果存在问题,欢迎",
+    "Move Files Failed {0}": "移动文件失败: {0}",
+    "Invalid data type": "无效的数据类型"
 }

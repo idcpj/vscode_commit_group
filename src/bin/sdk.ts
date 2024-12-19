@@ -1,6 +1,6 @@
 import { Repository } from "../@type/git";
 import { GitFileProvider } from "../lib/GitFileProvider";
-import { GitGroupManager } from "../lib/GitGroupManager";
+import { GitGroupManager as GroupManager } from "../lib/GroupManager";
 import * as vscode from 'vscode';
 import { GitManager } from "../lib/GitManager";
 import { Callback, SdkType } from "../@type/type";
@@ -17,7 +17,7 @@ export class Sdk implements SdkType {
 
     private workspaceRoot: string;
     private gitFileProvider: GitFileProvider;
-    private gitGroupManager: GitGroupManager;
+    private groupManager: GroupManager;
     private gitManager: GitManager;
     private context: vscode.ExtensionContext;
     private gitFileTreeDrop: GitFileTreeDrop;
@@ -31,7 +31,7 @@ export class Sdk implements SdkType {
         this.workspaceRoot = workspaceRoot;
 
         this.context = context;
-        this.gitGroupManager = new GitGroupManager(this);
+        this.groupManager = new GroupManager(this);
         this.gitFileProvider = new GitFileProvider(this);
         this.gitFileTreeDrop = new GitFileTreeDrop(this);
         this.treeViewManager = new TreeViewManager(this);
@@ -40,14 +40,9 @@ export class Sdk implements SdkType {
         this.gitManager = new GitManager(this);
     }
 
-    afterRun(fn: Callback): void {
-        this.afterRunFn=fn;
-    }
-
- 
  
     run(){
-        this.getGitManager().run(this.afterRunFn);
+        this.getGitManager().run();
         this.getTreeViewManager().run();
     }
 
@@ -68,8 +63,8 @@ export class Sdk implements SdkType {
         return this.gitFileProvider;
     }
 
-    public getGitGroupManager() {
-        return this.gitGroupManager;
+    public getGroupManager() {
+        return this.groupManager;
     }
 
     public getGitManager() {
@@ -109,24 +104,24 @@ export class Sdk implements SdkType {
             placeHolder: vscode.l10n.t('Enter Group Name And Press Enter'),
             validateInput: (value) => {
                 if (!value) return vscode.l10n.t('Name Cannot Be Empty');
-                if (this.getGitGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
+                if (this.getGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
                 return null;
             }
         });
 
         if (groupName) {
-            this.getGitGroupManager().group_add(GitGroupName_Other,groupName);
-            this.getGitGroupManager().cache_save();
-            this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
+            this.getGroupManager().group_add(GitGroupName_Other,groupName);
+            this.getGroupManager().cache_save();
+            this.getTreeViewManager().setTag(this.getGroupManager().group_lists().length);
             this.refresh();
         }
     }
 
     cmd_deleteGroup(item: GitTreeItemGroup) {
         try {
-            this.getGitGroupManager().group_deleteByName(item.getLabel());
-            this.getTreeViewManager().setTag(this.getGitGroupManager().group_lists().length);
-            this.getGitGroupManager().cache_save();
+            this.getGroupManager().group_deleteByName(item.getLabel());
+            this.getTreeViewManager().setTag(this.getGroupManager().group_lists().length);
+            this.getGroupManager().cache_save();
             this.refresh();
         } catch (e) {
             vscode.window.showErrorMessage(vscode.l10n.t('Delete Group Failed'));
@@ -135,8 +130,8 @@ export class Sdk implements SdkType {
 
     cmd_activeGroup(item: GitTreeItemGroup) {
         try {
-            this.getGitGroupManager().group_setActive(item.getLabel());
-            this.getGitGroupManager().cache_save();
+            this.getGroupManager().group_setActive(item.getLabel());
+            this.getGroupManager().cache_save();
             this.refresh();
         } catch (e) {
             vscode.window.showErrorMessage(vscode.l10n.t('Switch Active State Failed'));
@@ -151,14 +146,14 @@ export class Sdk implements SdkType {
                 validateInput: (value) => {
                     if (!value) return vscode.l10n.t('Name Cannot Be Empty');
                     if (value === item.getLabel()) return null;
-                    if (this.getGitGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
+                    if (this.getGroupManager().group_isExist(value)) return vscode.l10n.t('Group Name Exists');
                     return null;
                 }
             });
 
             if (newName) {
-                this.getGitGroupManager().group_rename(item.getLabel(), newName);
-                this.getGitGroupManager().cache_save();
+                this.getGroupManager().group_rename(item.getLabel(), newName);
+                this.getGroupManager().cache_save();
                 this.refresh();
             }
         } catch (e) {
@@ -169,7 +164,7 @@ export class Sdk implements SdkType {
     async cmd_exportFiles(item: GitTreeItemGroup | GitTreeItemFile) {
         try {
 
-            await this.getGitGroupManager().export_files(item);
+            await this.getGroupManager().files_export(item);
 
             
         } catch (e) {
@@ -186,5 +181,43 @@ export class Sdk implements SdkType {
             vscode.window.showErrorMessage(vscode.l10n.t('Open Changes Failed'));
         }
     }
-  
+
+    async cmd_moveToGroup() {
+        try {
+            // 获取选中的文件列表
+            const fileList = this.getTreeViewManager().getSelectedFileListMultiGroup();
+            if (fileList.length === 0) {
+                throw new Error(vscode.l10n.t('No Files Selected'));
+            }
+            
+            // 获取文件所在的分组
+            const groups = this.getGroupManager().group_getByFilePaths(fileList);
+         
+
+            // 获取可移动的目标分组列表
+            const targetGroups = this.getGroupManager().group_filterGroup(groups);
+            
+            // 显示分组选择弹窗
+            const selected = await vscode.window.showQuickPick(
+                targetGroups.map(group => ({
+                    label: group.getLabel(),
+                    group: group
+                })),
+                {
+                    placeHolder: vscode.l10n.t('Select Target Group')
+                }
+            );
+
+            if (selected) {
+                // 移动文件到目标分组
+                this.getGroupManager().file_move(fileList, selected.group);
+                this.getGroupManager().cache_save();
+                this.refresh();
+            }
+
+        } catch (e:any) {
+            console.log(e);
+            vscode.window.showErrorMessage(vscode.l10n.t('Move Files Failed {0}', e.toString()));
+        }
+    }
 }

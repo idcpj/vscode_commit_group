@@ -135,12 +135,32 @@ export class GitGroupManager {
             throw new Error(vscode.l10n.t('Group Name Exists With Name: {0}', newName));
         }
 
-  
-
         group.setLabel(newName);
-
       
     }
+
+    public group_getByFilePaths(filePath: string[]): GitTreeItemGroup[] {
+        const groups: GitTreeItemGroup[] = [];
+        for(const file of filePath){
+            const group = this.fileList[file]?.getGroup();
+            if(group){
+                groups.push(group);
+            }
+        }
+        return groups;
+    }
+
+
+
+    // 添加获取可移动目标分组的方法
+    public group_filterGroup(sourceGroup: GitTreeItemGroup[]): GitTreeItemGroup[] {
+        // 过滤掉源分组和内置的合并冲突分组
+        return this.groups.filter(group => 
+            !sourceGroup.includes(group)
+        );
+    }
+
+
 
     public file_lists(): GitTreeItemFile[] {
         return Object.values(this.fileList);
@@ -231,7 +251,7 @@ export class GitGroupManager {
         return activeGroup.getFileList().map(file => file.getFilePath());
     }
 
-    public async export_files(item: GitTreeItemGroup | GitTreeItemFile) {
+    public async files_export(item: GitTreeItemGroup | GitTreeItemFile) {
 
         let files: string[] = [];
         let group_name = '';
@@ -376,7 +396,5 @@ export class GitGroupManager {
         this.sdk.getContext().workspaceState.update('commit-group.groups', '');
         this.sdk.getContext().workspaceState.update('commit-group.fileList', '');
     }
-
-
 
 }
