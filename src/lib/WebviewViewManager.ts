@@ -12,37 +12,107 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
         this.sdk = sdk;
     }
 
-    resolveWebviewView(
+    async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken,
     ) {
+        try {
+            this.webviewView = webviewView;
 
-        this.webviewView = webviewView;
+            // 设置 webview 选项
+            webviewView.webview.options = {
+                enableScripts: true,
+                localResourceRoots: [
+                    this.sdk.getContext().extensionUri // 允许访问扩展目录
+                ]
+            };
 
-        webviewView.webview.options = {
-            enableScripts: true
-        };
+            await this.reload();
 
-        this.reload();
+            // 注册消息处理
+            this.registerMessageHandler(webviewView);
+
+        } catch (error) {
+            console.error('Failed to resolve webview:', error);
+            throw error; // 让 VS Code 知道发生了错误
+        }
+    }
+
+    async reload() {
+        if (!this.webviewView) {
+            return;
+        }
+
+        try {
+            if (!this.sdk.getGitManager().isActive()) {
+                this.webviewView.webview.html = this.renderEmptyHtml();
+                return;
+            }
 
 
+            // 获取 HTML 文件路径
+            const htmlPath = vscode.Uri.joinPath(
+                this.sdk.getContext().extensionUri,
+                'resources', 'html', 'index.html'
+            );
+
+            // 读取 HTML 内容
+            const htmlContent = await vscode.workspace.fs.readFile(htmlPath);
+            let html = Buffer.from(htmlContent).toString('utf-8');
+
+            // 替换占位符
+            const translations = {
+                commit: vscode.l10n.t('Commit'),
+                tips: vscode.l10n.t('if you have any questions, please'),
+                commitMessage: vscode.l10n.t('Enter Git Commit Message'),
+                issues: vscode.l10n.t('issues')
+            };
+
+            // 替换所有翻译占位符
+            Object.entries(translations).forEach(([key, value]) => {
+                html = html.replace(`__${key}__`, value);
+            });
+
+            // 设置 webview HTML
+            this.webviewView.webview.html = html;
+
+        } catch (error) {
+            console.error('Failed to reload webview:', error);
+            // 显示错误信息
+            this.webviewView.webview.html = this.renderErrorHtml(error);
+        }
+    }
+
+    private renderErrorHtml(error: any): string {
+        return `
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <div style="color: red; padding: 10px;">
+                        ${vscode.l10n.t('Failed to load view: {0}', error.message)}
+                    </div>
+                </body>
+            </html>
+        `;
+    }
+
+    private registerMessageHandler(webviewView: vscode.WebviewView) {
         webviewView.webview.onDidReceiveMessage(async data => {
             try {
-
                 if (data.type === "commit") {
 
-                    if(data.message.length==0){
+                    if (data.message.length == 0) {
                         throw new Error(vscode.l10n.t('Commit Message Cannot Be Empty'));
                     }
 
-                    if(this.sdk.getTreeViewManager().selectIsUnTracked()){
+                    if (this.sdk.getTreeViewManager().selectIsUnTracked()) {
                         throw new Error(vscode.l10n.t('Cannot Commit Untracked Group'));
                     }
 
                     let fileList: string[] = [];
 
-                  
+
                     // 如果选中分组,则只检测分组,没选中则使用默认
                     if (this.sdk.getTreeViewManager().isSelectGroup() || this.sdk.getTreeViewManager().isSelectFile()) {
                         fileList = this.sdk.getTreeViewManager().getSelectedFileList();
@@ -55,35 +125,23 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
                     }
 
 
-                    await this.sdk.getGitManager().commitByPathList(fileList,data.message);
+                    await this.sdk.getGitManager().commitByPathList(fileList, data.message);
 
 
                     this.sdk.refresh();
-                    
-                }else{
+
+                } else {
                     throw new Error(vscode.l10n.t('Invalid data type'));
                 }
             } catch (e: any) {
-                vscode.window.showErrorMessage(vscode.l10n.t('Commit Failed {0}', e.message), vscode.l10n.t('Confirm'));
+                console.error('Message handler error:', e);
+                vscode.window.showErrorMessage(
+                    vscode.l10n.t('Commit Failed {0}', e.message),
+                    vscode.l10n.t('Confirm')
+                );
             }
         });
-
-
     }
-
-    reload(){
-        if(!this.webviewView){
-            return;
-        }
-
-        if(!this.sdk.getGitManager().isActive()){
-            this.webviewView!.webview.html = this.renderEmptyHtml();
-            return;
-        }
-
-        this.webviewView!.webview.html = this.renderHtml();
-    }
-
 
     public setDescription(description: string) {
         if (this.webviewView) {
@@ -94,107 +152,10 @@ export class WebviewViewManager implements vscode.WebviewViewProvider {
 
     private renderEmptyHtml(): string {
         return `
-           <div>
-                ${l10n.t('Workspace Not Initialized As Git')}
-            </div>
-        `;
+        <div>
+    ${l10n.t('Workspace Not Initialized As Git')}
+</div>`
     }
 
 
-    private renderHtml() {
-        return `<!DOCTYPE html>
-            <html>
-                <head>
-                    <style>
-                        #commitMessage{
-                            width: 99%;
-                            height: 24px;
-                            background: #3C3C3C;
-                            color: #CCCCCC;
-                            border: 1px solid #3C3C3C;
-                            margin-bottom: 8px;
-                            outline: none;
-                        }
-
-                        #commitButton{
-                            background: #0E639C;
-                            color: white;
-                            border: none;
-                            cursor: pointer;
-                            font-size: 13px;
-                            width: 100%;
-                            height: 24px;
-                        }
-                        #commitButton:hover{
-                            background: #026ec1;
-                        }
-                            
-                        .tips{
-                            color: #888888;
-                            font-size: 13px;
-                            margin-top: 8px;
-                        }
-                        .tips-buttom{
-                            margin-top: 12px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    
-                    <input type="text" id="commitMessage"  placeholder="${l10n.t('Enter Git Commit Message')}"  >
-
-                    <button id="commitButton">${l10n.t('Commit')}</button>
-
-                    <div class="tips">
-                         <div class="tips-buttom">
-                            ${l10n.t('if you have any questions, please')}<a href="https://github.com/idcpj/vscode_commit_group/issues"> ${l10n.t('issues')}</a>
-                        </div>
-                    </div>
-
-                   
-
-                    <script>
-                        const vscode = acquireVsCodeApi();
-
-                      
-                        window.addEventListener('load',()=>{
-                            const state = vscode.getState();
-                            if(state){
-                                document.getElementById('commitMessage').value = state.value;
-                            }
-                        });
-                        
-
-                        document.getElementById('commitMessage').addEventListener('keyup', (e) => {
-                            if (e.key === 'Enter') {
-                                vscode.postMessage({ 
-                                    type: 'commit',
-                                    message: e.target.value 
-                                });
-                                e.target.value = '';
-                                vscode.setState({ value: '' });
-                            }
-                        });
-
-                        document.getElementById('commitMessage').addEventListener('input', (e) => {
-                            vscode.setState({ value: e.target.value });
-                        });
-
-                        
-                        document.getElementById('commitButton').addEventListener('click', (e) => {
-                            const message = document.getElementById('commitMessage');
-                            if(!message){
-                                return;
-                            }
-                            vscode.postMessage({ 
-                                type: 'commit',
-                                message: message.value
-                            });
-                           message.value = '';
-                        });
-                    </script>
-                </body>
-            </html>
-        `
-    }
 }

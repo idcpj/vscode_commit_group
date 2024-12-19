@@ -154,6 +154,7 @@
       ]
     }
   },
+
   "extensionDependencies": [
     "vscode.git"
   ],

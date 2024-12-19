@@ -81,10 +81,11 @@ export class Sdk implements SdkType {
     refresh() {
         
         this.getTreeViewManager().setTag(0);
-        this.getWebviewViewManager().reload();
-        this.getGitFileProvider().refresh();
+        this.getWebviewViewManager().reload().then(()=>{
+            this.getGitFileProvider().refresh();
+        })
+        
     }
-
 
 
     webview_form(){
